@@ -1,0 +1,16 @@
+**/bin/
+**/obj/
+/artifacts/
+/.superpowers/
+/.vs/
+/.idea/
+/.codex/
+*.user
+*.suo
+*.log
+*.tmp
+recitewords.settings.json
+**/userdata/
+/wordlist/
+Thumbs.db
+Desktop.ini
