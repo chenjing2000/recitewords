@@ -20,10 +20,7 @@
     </StackPanel>
     <Border x:Name="DefinitionBorder" Grid.Row="3" Background="White" BorderBrush="#D8E0E9" BorderThickness="1" CornerRadius="9">
       <Grid>
-        <TextBlock Text="先回想词义，再点击“释义”查看。" Foreground="#A1ABB6" HorizontalAlignment="Center" VerticalAlignment="Center" TextWrapping="Wrap" Margin="16">
-          <TextBlock.Style><Style TargetType="TextBlock"><Setter Property="Visibility" Value="Visible" /><Style.Triggers><DataTrigger Binding="{Binding DefinitionVisible}" Value="True"><Setter Property="Visibility" Value="Collapsed" /></DataTrigger></Style.Triggers></Style></TextBlock.Style>
-        </TextBlock>
-        <views:DefinitionView x:Name="Definition" Word="{Binding CurrentWord}" Visibility="{Binding DefinitionVisible, Converter={StaticResource BoolVisibility}}" />
+        <views:DefinitionView x:Name="Definition" Word="{Binding DefinitionWord}" Visibility="{Binding DefinitionVisible, Converter={StaticResource BoolVisibility}}" />
       </Grid>
     </Border>
     <Grid x:Name="ReviewControls" Grid.Row="4" Margin="0,16,0,0">
@@ -36,12 +33,12 @@
         <ColumnDefinition Width="*" MinWidth="52" /><ColumnDefinition Width="10" />
         <ColumnDefinition Width="*" MinWidth="52" />
       </Grid.ColumnDefinitions>
-      <ComboBox x:Name="ReviewFilterCombo" Width="95" ItemsSource="{Binding Filters}" SelectedValuePath="Value" SelectedValue="{Binding SelectedFilter, Mode=TwoWay}" Padding="2,3">
+      <ComboBox x:Name="ReviewFilterCombo" Width="79" ItemsSource="{Binding Filters}" SelectedValuePath="Value" SelectedValue="{Binding SelectedFilter, Mode=TwoWay}" Padding="2,3">
         <ComboBox.ItemTemplate><DataTemplate><TextBlock Text="{Binding Label}" Margin="{DynamicResource FilterTextIndent}" /></DataTemplate></ComboBox.ItemTemplate>
       </ComboBox>
       <Button x:Name="PreviousButton" Grid.Column="2" Command="{Binding PreviousCommand}" Padding="0" ToolTip="上一词" AutomationProperties.Name="上一词"><Image Source="{StaticResource PreviousWordIcon}" Width="24" Height="24" /></Button>
       <Button x:Name="NextButton" Grid.Column="4" Command="{Binding NextCommand}" Padding="0" ToolTip="下一词" AutomationProperties.Name="下一词"><Image Source="{StaticResource NextWordIcon}" Width="24" Height="24" /></Button>
-      <Button x:Name="ExplanationButton" Grid.Column="6" Command="{Binding RevealCommand}" Padding="0" ToolTip="显示释义" AutomationProperties.Name="显示释义"><Image Source="{StaticResource ExplanationIcon}" Width="24" Height="24" /></Button>
+      <Button x:Name="ExplanationButton" Grid.Column="6" Command="{Binding RevealCommand}" Padding="0" ToolTip="显示／清空释义" AutomationProperties.Name="显示或清空释义"><Image Source="{StaticResource ExplanationIcon}" Width="24" Height="24" /></Button>
       <Button x:Name="UnknownButton" Grid.Column="8" Content="不懂" Command="{Binding UnknownCommand}" Padding="4,3" />
       <Button Grid.Column="10" Content="认识" Command="{Binding FamiliarCommand}" Padding="4,3" />
       <Button Grid.Column="12" Content="掌握" Command="{Binding MasteredCommand}" Padding="4,3" />

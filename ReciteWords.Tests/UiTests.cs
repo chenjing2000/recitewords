@@ -88,6 +88,7 @@ internal static partial class Program
             Equal(true, window.MinWidth > originalMinimumWidth);
             Equal("全部(123456)", ((FilterChoice)filterCombo.SelectedItem).Label);
             vm.Filters[0].UpdateCount(6); vm.RevealDefinition(); Pump(); window.UpdateLayout();
+            exampleTitle = editor.Document.Blocks.OfType<Paragraph>().SelectMany(p => p.Inlines.OfType<Run>()).First(r => r.Text == "Example:  ");
             Equal(null, window.FindName("ReviewButton"));
             Equal(null, window.FindName("PositionTextLabel"));
             Equal(0, VisualChildren(window).OfType<TextBox>().Count());
@@ -95,6 +96,11 @@ internal static partial class Program
             var next = (Button)window.FindName("NextButton");
             var unknown = (Button)window.FindName("UnknownButton");
             var explanation = (Button)window.FindName("ExplanationButton");
+            vm.RevealCommand.Execute(null); Pump(); Equal(false, vm.DefinitionVisible);
+            Equal(0, editor.Document.Blocks.Count);
+            vm.RevealCommand.Execute(null); Pump(); Equal(true, vm.DefinitionVisible);
+            Equal(true, editor.Document.Blocks.Count > 0);
+            exampleTitle = editor.Document.Blocks.OfType<Paragraph>().SelectMany(p => p.Inlines.OfType<Run>()).First(r => r.Text == "Example:  ");
             foreach (var pair in new[] { ("FolderButton", "OpenFolderIcon"), ("PreviousButton", "PreviousWordIcon"), ("NextButton", "NextWordIcon"), ("ExplanationButton", "ExplanationIcon") })
                 Equal(window.FindResource(pair.Item2), VisualChildren((Button)window.FindName(pair.Item1)).OfType<Image>().Single().Source);
             double fixedFilterWidth = filterCombo.ActualWidth;
@@ -115,7 +121,7 @@ internal static partial class Program
             Equal(true, wordUk.TranslatePoint(new Point(), phoneticRow).X < usLabel.TranslatePoint(new Point(), phoneticRow).X);
             Equal(true, usLabel.TranslatePoint(new Point(), phoneticRow).X < wordUs.TranslatePoint(new Point(), phoneticRow).X);
             Equal(true, Math.Abs(phoneticRow.TranslatePoint(new Point(), root).X + phoneticRow.ActualWidth / 2 - root.ActualWidth / 2) < 1);
-            Equal(95.0, filterCombo.ActualWidth);
+            Equal(79.0, filterCombo.ActualWidth);
             Equal(32.0, filterCombo.ActualHeight);
             double wideBookWidth = bookCombo.ActualWidth;
             window.Width = window.MinWidth; window.Height = window.MinHeight; Pump(); window.UpdateLayout();
@@ -139,7 +145,8 @@ internal static partial class Program
             Equal(7.0, verticalBar.ActualWidth);
             foreach (var control in VisualChildren(window).OfType<Control>().Where(control => control is Button || control is ComboBox || control is TextBox))
             {
-                Equal(audioButtons.Contains(control) ? 20.0 : 32.0, control.ActualHeight);
+                bool isAudio = control.ToolTip is string tip && (tip == "单词英音" || tip == "单词美音" || tip == "例句英音" || tip == "例句美音");
+                Equal(isAudio ? 20.0 : 32.0, control.ActualHeight);
                 var origin = control.TranslatePoint(new Point(), root);
                 Equal(true, origin.X >= -0.5 && origin.X + control.ActualWidth <= root.ActualWidth + 0.5);
             }

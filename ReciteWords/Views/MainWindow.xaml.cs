@@ -41,7 +41,7 @@ public partial class MainWindow : Window
                 VisualTreeHelper.GetDpi(this).PixelsPerDip);
             textWidth = Math.Max(textWidth, text.WidthIncludingTrailingWhitespace);
         }
-        ReviewFilterCombo.Width = Math.Ceiling(Math.Max(79, textWidth + indent.Left + 24) * 1.2);
+        ReviewFilterCombo.Width = Math.Ceiling(Math.Max(79, textWidth + indent.Left + 24));
     }
     private void UpdateMinimumSize()
     {

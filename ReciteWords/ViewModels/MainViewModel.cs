@@ -96,6 +96,7 @@ public class MainViewModel : INotifyPropertyChanged, IDisposable
     }
     public Word? CurrentWord => loaded ? session.CurrentWord : null;
     public bool DefinitionVisible { get; private set; }
+    public Word? DefinitionWord => DefinitionVisible ? CurrentWord : null;
     public bool HasWarning => warning.Length > 0;
     public string Warning => warning;
     public string InformationText => warning.Replace("\r", "").Replace("\n", " · ");
@@ -190,7 +191,7 @@ public class MainViewModel : INotifyPropertyChanged, IDisposable
         string? path = WordAudio("uk");
         if (path != null) queuePlayback(() => { if (!disposed && request == playbackRequest) player.Play(path); });
     }
-    public void RevealDefinition() { if (CurrentWord != null) { DefinitionVisible = true; Notify(); } }
+    public void RevealDefinition() { if (CurrentWord != null) { DefinitionVisible = !DefinitionVisible; Notify(); } }
     public string? WordAudio(string accent) => CurrentWord == null ? null : catalog.FindWord(CurrentWord.Text, accent);
     public string? ExampleAudio(string eid, string accent) => CurrentWord == null || eid.Length == 0 ? null : catalog.FindExample(CurrentWord.Text, eid, accent);
     public void PlayWord(string accent) { PlayPath(WordAudio(accent)); }

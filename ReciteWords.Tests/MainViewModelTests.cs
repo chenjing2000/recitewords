@@ -62,6 +62,10 @@ internal static partial class Program
             var vm = new MainViewModel(new WordListRepository(), new TestProgress(), new SettingsRepository(Path.Combine(folder, "settings.tmp")), new ReviewSession(), new TestCatalog(), player, action => queue.Add(action));
             vm.SelectFolder(folder); queue[0](); Equal("a-uk.mp3", player.Played[0]);
             vm.RevealDefinition(); Equal(true, vm.DefinitionVisible); Equal(1, queue.Count);
+            vm.RevealCommand.Execute(null); Equal(false, vm.DefinitionVisible); Equal(1, queue.Count);
+            Equal<Word?>(null, vm.DefinitionWord);
+            vm.RevealCommand.Execute(null); Equal(true, vm.DefinitionVisible); Equal(1, queue.Count);
+            Equal(vm.CurrentWord, vm.DefinitionWord);
             vm.Rate(StudyLevel.Familiar); Equal("b", vm.CurrentWord!.Text); Equal(false, vm.DefinitionVisible);
         });
         Check("save failure restores original word and no next audio", () => {
