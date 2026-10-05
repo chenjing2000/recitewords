@@ -1,4 +1,4 @@
-> 此文档保留原始方案。后续已确认的界面调整以 docs/Getting-Started.md 为准；本次模块整改见 docs/Code-Review.md。
+> 此文档保留原始方案，其中旧 wid、单音标、进度与 audio.json 规则已作废。当前规则以 docs/skills/recitewords-wordlist-format/SKILL.md、docs/Progress-Format.md 和 docs/Getting-Started.md 为准。
 
 # ReciteWords 实现方案
 

@@ -34,28 +34,31 @@ public class WordListRepository : IWordListRepository
                 throw new InvalidDataException("schema_version 必须为正整数");
             list.SchemaVersion = number;
         }
-        var wids = new HashSet<string>(StringComparer.Ordinal);
         var spellings = new HashSet<string>(StringComparer.Ordinal);
+        var audioNames = new Dictionary<string, string>(StringComparer.OrdinalIgnoreCase);
         var eids = new HashSet<string>(StringComparer.Ordinal);
         foreach (var item in JsonFields.Array(root, "words", true))
         {
             JsonFields.Object(item);
             var word = new Word
             {
-                Wid = JsonFields.Text(item, "wid", true),
                 Text = JsonFields.Text(item, "word", true),
-                Phonetic = JsonFields.Text(item, "phonetic", true, true),
+                phonetic_uk = JsonFields.Text(item, "phonetic_uk", true, true),
+                phonetic_us = JsonFields.Text(item, "phonetic_us", true, true),
                 Notes = JsonFields.Text(item, "notes"),
                 Etymology = JsonFields.Text(item, "etymology")
             };
-            if (!wids.Add(word.Wid)) throw new InvalidDataException("重复 wid: " + word.Wid);
             if (!spellings.Add(Spelling.Fold(word.Text))) throw new InvalidDataException("重复拼写: " + word.Text);
+            string audioName = AudioFileName.Stem(word.Text);
+            if (audioNames.TryGetValue(audioName, out string? otherWord))
+                throw new InvalidDataException("音频文件名冲突: “" + otherWord + "” 与 “" + word.Text + "” 均对应 " + audioName);
+            audioNames.Add(audioName, word.Text);
             foreach (var senseItem in JsonFields.Array(item, "senses", true))
             {
                 JsonFields.Object(senseItem);
                 var sense = new WordSense
                 {
-                    Pos = JsonFields.Text(senseItem, "pos"),
+                    Pos = JsonFields.Text(senseItem, "pos", true),
                     EnglishMeaning = JsonFields.Text(senseItem, "english_meaning"),
                     ChineseMeaning = JsonFields.Text(senseItem, "chinese_meaning", true),
                     Register = JsonFields.Strings(senseItem, "register"),

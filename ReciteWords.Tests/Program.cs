@@ -14,7 +14,7 @@ internal static partial class Program
         Directory.CreateDirectory(Temp);
         try
         {
-            WordListTests(); ProgressTests(); ReviewTests(); AudioTests(); ViewModelTests(); WindowTests();
+            AudioFileNameTests(); NewFormatTests(); WordListTests(); ProgressTests(); ReviewTests(); AudioTests(); ViewModelTests(); WindowTests();
             if (args.Contains("--ui-qa")) UiTests();
             int audioArgument = Array.IndexOf(args, "--mp3");
             if (audioArgument >= 0 && audioArgument + 1 < args.Length)
@@ -46,20 +46,20 @@ internal static partial class Program
         File.WriteAllText(path, content);
         return path;
     }
-    private const string Minimal = "{\"words\":[{\"wid\":\"a\",\"word\":\"aware\",\"phonetic\":\"/əˈweə/\",\"senses\":[{\"chinese_meaning\":\"知道的\"}]}]}";
+    private const string Minimal = "{\"words\":[{\"word\":\"aware\",\"phonetic_uk\":\"/əˈweə/\",\"phonetic_us\":\"/əˈwer/\",\"senses\":[{\"pos\":\"adj.\",\"chinese_meaning\":\"知道的\"}]}]}";
     static void WordListTests()
     {
         var repo = new WordListRepository();
         Check("minimal wordlist and filename name", () => {
             var list = repo.Load(Write("minimal.json", Minimal));
-            Equal("minimal", list.Name); Equal("a", list.Words[0].Wid);
+            Equal("minimal", list.Name); Equal("aware", list.Words[0].Text);
         });
         Check("unknown nested fields ignored", () => {
-            var list = repo.Load(Write("unknown.json", Minimal.Replace("\"words\":", "\"future\":{\"nested\":[null,42]},\"words\":").Replace("\"wid\":", "\"extra\":false,\"wid\":")));
+            var list = repo.Load(Write("unknown.json", Minimal.Replace("\"words\":", "\"future\":{\"nested\":[null,42]},\"words\":").Replace("\"word\":", "\"extra\":false,\"word\":")));
             Equal(1, list.Words.Count);
         });
         Check("new sense fields and word etymology", () => {
-            string json = Minimal.Replace("\"phonetic\":", "\"etymology\":\"词源\",\"phonetic\":").Replace("\"chinese_meaning\":", "\"register\":[\"formal\"],\"antonyms\":[\"unaware\"],\"example\":\"Example\",\"chinese_meaning\":");
+            string json = Minimal.Replace("\"phonetic_uk\":", "\"etymology\":\"词源\",\"phonetic_uk\":").Replace("\"chinese_meaning\":", "\"register\":[\"formal\"],\"antonyms\":[\"unaware\"],\"example\":\"Example\",\"chinese_meaning\":");
             var word = repo.Load(Write("extended.json", json)).Words[0];
             Equal("词源", word.Etymology); Equal("formal", word.Senses[0].Register[0]); Equal("unaware", word.Senses[0].Antonyms[0]);
         });
@@ -69,11 +69,11 @@ internal static partial class Program
         });
         foreach (string value in new[] { "0", "-1", "1.0", "1e2", "true", "null", "\"2\"" })
             Check("invalid version " + value, () => Reject(() => repo.Load(Write("bad.json", Minimal.Replace("{\"words\":", "{\"schema_version\":" + value + ",\"words\":")))));
-        Check("phonetic required", () => Reject(() => repo.Load(Write("bad.json", Minimal.Replace("\"phonetic\":\"/əˈweə/\",", "")))));
-        Check("known optional wrong type rejected", () => Reject(() => repo.Load(Write("bad.json", Minimal.Replace("\"wid\":", "\"notes\":42,\"wid\":")))));
-        Check("duplicate keys rejected", () => Reject(() => repo.Load(Write("bad.json", Minimal.Replace("\"wid\":", "\"wid\":\"x\",\"wid\":")))));
+        Check("UK phonetic required", () => Reject(() => repo.Load(Write("bad.json", Minimal.Replace("\"phonetic_uk\":\"/əˈweə/\",", "")))));
+        Check("known optional wrong type rejected", () => Reject(() => repo.Load(Write("bad.json", Minimal.Replace("\"word\":", "\"notes\":42,\"word\":")))));
+        Check("duplicate keys rejected", () => Reject(() => repo.Load(Write("bad.json", Minimal.Replace("\"word\":", "\"word\":\"x\",\"word\":")))));
         Check("invalid Unicode text is rejected as an input error", () => Reject(() => repo.Load(Write("unicode.json", Minimal.Replace("aware", "\\ud800")))));
-        Check("invalid Unicode array value is rejected", () => Reject(() => repo.Load(Write("unicode-array.json", Minimal.Replace("\"wid\":", "\"register\":[\"\\ud800\"],\"wid\":").Replace("\"chinese_meaning\":", "\"synonyms\":[\"\\ud800\"],\"chinese_meaning\":")))));
+        Check("invalid Unicode array value is rejected", () => Reject(() => repo.Load(Write("unicode-array.json", Minimal.Replace("\"word\":", "\"register\":[\"\\ud800\"],\"word\":").Replace("\"chinese_meaning\":", "\"synonyms\":[\"\\ud800\"],\"chinese_meaning\":")))));
         Check("invalid Unicode field name is rejected", () => Reject(() => repo.Load(Write("unicode-name.json", Minimal.Replace("\"words\":", "\"\\ud800\":42,\"words\":")))));
         Check("example without eid allowed", () => Equal("Test", repo.Load(Write("example.json", Minimal.Replace("\"chinese_meaning\":", "\"example\":\"Test\",\"chinese_meaning\":"))).Words[0].Senses[0].Example));
         Check("eid leading zero retained", () => Equal("001234", repo.Load(Write("eid.json", Minimal.Replace("\"chinese_meaning\":", "\"eid\":\"001234\",\"chinese_meaning\":"))).Words[0].Senses[0].Eid));

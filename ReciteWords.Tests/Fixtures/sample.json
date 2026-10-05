@@ -3,27 +3,126 @@
   "name": "小样本验收词库 (6)",
   "words": [
     {
-      "wid": "cognizant", "word": "cognizant", "phonetic": "/ˈkɒɡnɪzənt/",
-      "senses": [{
-        "pos": "adj.", "english_meaning": "aware of and understanding a fact or situation", "chinese_meaning": "意识到的；了解的",
-        "register": ["formal"], "eid": "727950",
-        "example": "Cognizant that the surviving census excluded itinerant laborers, the historian refrained from treating its figures as exhaustive.",
-        "example_translation": "这位历史学家意识到现存人口普查遗漏了流动劳工，因此没有把其中的数据视为详尽无遗。",
-        "synonyms": ["aware", "conscious", "mindful"], "antonyms": ["unaware", "oblivious"], "collocations": ["cognizant of", "remain cognizant"]
-      }],
+      "word": "cognizant",
+      "senses": [
+        {
+          "pos": "adj.",
+          "english_meaning": "aware of and understanding a fact or situation",
+          "chinese_meaning": "意识到的；了解的",
+          "register": [
+            "formal"
+          ],
+          "eid": "727950",
+          "example": "Cognizant that the surviving census excluded itinerant laborers, the historian refrained from treating its figures as exhaustive.",
+          "example_translation": "这位历史学家意识到现存人口普查遗漏了流动劳工，因此没有把其中的数据视为详尽无遗。",
+          "synonyms": [
+            "aware",
+            "conscious",
+            "mindful"
+          ],
+          "antonyms": [
+            "unaware",
+            "oblivious"
+          ],
+          "collocations": [
+            "cognizant of",
+            "remain cognizant"
+          ]
+        }
+      ],
       "notes": "常与 of 连用，强调对事实或处境已有清楚认识。",
-      "etymology": "词源：由 cognizance 逆构而来，后者经古法语追溯至拉丁语 cognoscere（认识、获知）。词义由“知识、认知”发展为“意识到、了解”。"
+      "etymology": "词源：由 cognizance 逆构而来，后者经古法语追溯至拉丁语 cognoscere（认识、获知）。词义由“知识、认知”发展为“意识到、了解”。",
+      "phonetic_uk": "/ˈkɒɡnɪzənt/",
+      "phonetic_us": "/ˈkɑːɡnɪzənt/"
     },
     {
-      "wid": "address", "word": "address", "phonetic": "/əˈdres/",
+      "word": "address",
       "senses": [
-        {"pos":"v.","english_meaning":"to deal with a problem","chinese_meaning":"处理；应对","example":"Governments should address educational inequality.","example_translation":"政府应当解决教育不平等问题。","eid":"001234","synonyms":["tackle"],"collocations":["address an issue"]},
-        {"pos":"n.","chinese_meaning":"地址","example":"Please write your address."}
-      ]
+        {
+          "pos": "v.",
+          "english_meaning": "to deal with a problem",
+          "chinese_meaning": "处理；应对",
+          "example": "Governments should address educational inequality.",
+          "example_translation": "政府应当解决教育不平等问题。",
+          "eid": "001234",
+          "synonyms": [
+            "tackle"
+          ],
+          "collocations": [
+            "address an issue"
+          ]
+        },
+        {
+          "pos": "n.",
+          "chinese_meaning": "地址",
+          "example": "Please write your address."
+        }
+      ],
+      "phonetic_uk": "/əˈdres/",
+      "phonetic_us": "/əˈdres/"
     },
-    {"wid":"aware","word":"aware","phonetic":"","senses":[{"chinese_meaning":"知道的；意识到的"}],"future":{"ignored":[1,true,null]}},
-    {"wid":"substantial","word":"substantial","phonetic":"/səbˈstænʃəl/","senses":[{"pos":"adj.","chinese_meaning":"大量的；重大的；可观的","synonyms":["considerable","significant"]}]},
-    {"wid":"controversial","word":"controversial","phonetic":"/ˌkɒntrəˈvɜːʃəl/","senses":[{"pos":"adj.","chinese_meaning":"有争议的","register":["neutral"]}],"etymology":"用于测试长内容自动换行与手动滚动。此字段属于单词而不是单个义项；所有未知内容均不显示。"},
-    {"wid":"pedagogy","word":"pedagogy","phonetic":"/ˈpedəɡɒdʒi/","senses":[{"pos":"n.","chinese_meaning":"教学法；教育学","antonyms":[],"register":["academic"]}]}
+    {
+      "word": "aware",
+      "senses": [
+        {
+          "chinese_meaning": "知道的；意识到的",
+          "pos": "adj."
+        }
+      ],
+      "future": {
+        "ignored": [
+          1,
+          true,
+          null
+        ]
+      },
+      "phonetic_uk": "",
+      "phonetic_us": ""
+    },
+    {
+      "word": "substantial",
+      "senses": [
+        {
+          "pos": "adj.",
+          "chinese_meaning": "大量的；重大的；可观的",
+          "synonyms": [
+            "considerable",
+            "significant"
+          ]
+        }
+      ],
+      "phonetic_uk": "/səbˈstænʃəl/",
+      "phonetic_us": "/səbˈstænʃəl/"
+    },
+    {
+      "word": "controversial",
+      "senses": [
+        {
+          "pos": "adj.",
+          "chinese_meaning": "有争议的",
+          "register": [
+            "neutral"
+          ]
+        }
+      ],
+      "etymology": "用于测试长内容自动换行与手动滚动。此字段属于单词而不是单个义项；所有未知内容均不显示。",
+      "phonetic_uk": "/ˌkɒntrəˈvɜːʃəl/",
+      "phonetic_us": "/ˌkɑːntrəˈvɜːrʃəl/"
+    },
+    {
+      "word": "pedagogy",
+      "senses": [
+        {
+          "pos": "n.",
+          "chinese_meaning": "教学法；教育学",
+          "antonyms": [],
+          "register": [
+            "academic"
+          ]
+        }
+      ],
+      "phonetic_uk": "/ˈpedəɡɒdʒi/",
+      "phonetic_us": "/ˈpedəɡɑːdʒi/"
+    }
   ]
 }

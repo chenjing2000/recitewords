@@ -11,9 +11,10 @@
     <Grid Grid.Row="1" Margin="0,0,0,8">
       <TextBlock Text="{Binding WordHeading}" FontSize="16" FontWeight="SemiBold" Foreground="#b81a35" TextAlignment="Center" TextTrimming="CharacterEllipsis" Margin="0" VerticalAlignment="Center" />
     </Grid>
-    <StackPanel Grid.Row="2" Orientation="Horizontal" HorizontalAlignment="Center" Margin="0,0,0,12">
-      <TextBlock Text="{Binding Phonetic}" VerticalAlignment="Center" Margin="0,0,8,0" />
+    <StackPanel x:Name="PhoneticRow" Grid.Row="2" Orientation="Horizontal" HorizontalAlignment="Center" Margin="0,0,0,12">
+      <TextBlock x:Name="UkPhoneticLabel" Text="{Binding phonetic_uk}" VerticalAlignment="Center" Margin="0,0,8,0" />
       <Button x:Name="WordUkButton" Content="🔊" Command="{Binding UkCommand}" Style="{StaticResource AudioButton}" ToolTip="单词英音" AutomationProperties.Name="播放单词英音" />
+      <TextBlock x:Name="UsPhoneticLabel" Text="{Binding phonetic_us}" VerticalAlignment="Center" Margin="12,0,6,0" />
       <Button x:Name="WordUsButton" Content="🔊" Command="{Binding UsCommand}" Style="{StaticResource AudioButton}" ToolTip="单词美音" AutomationProperties.Name="播放单词美音" />
     </StackPanel>
     <Border x:Name="DefinitionBorder" Grid.Row="3" MinHeight="114" Background="White" BorderBrush="#D8E0E9" BorderThickness="1" CornerRadius="9">

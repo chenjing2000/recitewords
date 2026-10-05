@@ -99,7 +99,15 @@ internal static partial class Program
             Equal("#FFB81A35", ((SolidColorBrush)wordLabel.Foreground).Color.ToString());
             var root = (Grid)window.Content;
             Equal(true, Math.Abs(wordLabel.TranslatePoint(new Point(), root).X + wordLabel.ActualWidth / 2 - root.ActualWidth / 2) < 1);
-            var phoneticRow = (StackPanel)VisualTreeHelper.GetParent(VisualChildren(window).OfType<TextBlock>().First(text => text.Text == vm.Phonetic));
+            var phoneticRow = (StackPanel)VisualTreeHelper.GetParent(VisualChildren(window).OfType<TextBlock>().First(text => text.Text == vm.phonetic_uk));
+            var ukLabel = (TextBlock)window.FindName("UkPhoneticLabel");
+            var usLabel = (TextBlock)window.FindName("UsPhoneticLabel");
+            var wordUk = (Button)window.FindName("WordUkButton");
+            var wordUs = (Button)window.FindName("WordUsButton");
+            Equal(vm.phonetic_uk, ukLabel.Text); Equal(vm.phonetic_us, usLabel.Text);
+            Equal(true, ukLabel.TranslatePoint(new Point(), phoneticRow).X < wordUk.TranslatePoint(new Point(), phoneticRow).X);
+            Equal(true, wordUk.TranslatePoint(new Point(), phoneticRow).X < usLabel.TranslatePoint(new Point(), phoneticRow).X);
+            Equal(true, usLabel.TranslatePoint(new Point(), phoneticRow).X < wordUs.TranslatePoint(new Point(), phoneticRow).X);
             Equal(true, Math.Abs(phoneticRow.TranslatePoint(new Point(), root).X + phoneticRow.ActualWidth / 2 - root.ActualWidth / 2) < 1);
             Equal(95.0, filterCombo.ActualWidth);
             Equal(32.0, filterCombo.ActualHeight);
@@ -129,7 +137,7 @@ internal static partial class Program
                 var origin = control.TranslatePoint(new Point(), root);
                 Equal(true, origin.X >= -0.5 && origin.X + control.ActualWidth <= root.ActualWidth + 0.5);
             }
-            Equal("cognizant", vm.CurrentWord!.Wid);
+            Equal("cognizant", vm.CurrentWord!.Text);
             Equal(true, window.ActualWidth <= window.MaxWidth + 1); Equal(true, window.ActualHeight <= window.MaxHeight + 1);
             double originalLeft = window.Left;
             double movingLeft = originalLeft + window.MaxWidth + 30;
@@ -158,7 +166,7 @@ internal static partial class Program
             window.WindowState = WindowState.Maximized; Pump();
             Equal(true, window.ActualWidth <= window.MaxWidth + 1); Equal(true, window.ActualHeight <= window.MaxHeight + 1);
             window.WindowState = WindowState.Normal; Pump();
-            vm.Rate(ReciteWords.Models.StudyLevel.Mastered); Equal("address", vm.CurrentWord!.Wid); vm.Navigate(-1); vm.Rate(ReciteWords.Models.StudyLevel.Unknown);
+            vm.Rate(ReciteWords.Models.StudyLevel.Mastered); Equal("address", vm.CurrentWord!.Text); vm.Navigate(-1); vm.Rate(ReciteWords.Models.StudyLevel.Unknown);
             Pump(); Equal("未学(5)", vm.Filters[1].Label); Equal("不懂(1)", vm.Filters[2].Label); Equal("掌握(0)", vm.Filters[4].Label);
             filterCombo.IsDropDownOpen = true; Pump();
             Capture(window, Path.Combine(output, "filter-counts.png"));
@@ -183,7 +191,7 @@ internal static partial class Program
             Capture(window, Path.Combine(output, "information-collapsed.png"));
             window.Close();
             var restored = new ReviewSession(); restored.Load(new WordListRepository().Load(Path.Combine(folder, "sample.json")), new ProgressRepository().LoadOrCreate(Path.Combine(folder, "sample.json"), new WordListRepository().Load(Path.Combine(folder, "sample.json"))));
-            Equal("address", restored.CurrentWord!.Wid); Equal(ReciteWords.Models.StudyLevel.Unknown, restored.Capture().Words["cognizant"].Level);
+            Equal("cognizant", restored.CurrentWord!.Text); Equal(ReciteWords.Models.StudyLevel.Unknown, restored.GetProgress().Words["cognizant"]);
             File.WriteAllText(Path.Combine(output, "ui-report.txt"), $"Window DIP: {window.ActualWidth} x {window.ActualHeight}; max {window.MaxWidth} x {window.MaxHeight}\nSample: 6 words; rating and reopen passed.\n");
             app.Shutdown();
         });
@@ -223,3 +231,4 @@ internal static partial class Program
         bitmap.Render(window); var encoder = new PngBitmapEncoder(); encoder.Frames.Add(BitmapFrame.Create(bitmap)); using var output = File.Create(path); encoder.Save(output);
     }
 }
+

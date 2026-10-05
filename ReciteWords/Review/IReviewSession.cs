@@ -8,8 +8,9 @@ public interface IReviewSession
     bool Start(ReviewFilter filter, int number);
     bool Move(int offset);
     void Rate(StudyLevel level);
-    ReviewProgress Capture();
-    void Restore(ReviewProgress progress);
+    ReviewProgress GetProgress();
+    ReviewSnapshot Capture();
+    void Restore(ReviewSnapshot snapshot);
     Word? CurrentWord { get; }
     ReviewFilter Filter { get; }
     int Count { get; }

@@ -18,34 +18,42 @@ artifacts/app/
 
 ## 使用
 
-- 筛选“全部、未学、不懂、认识、掌握”，填写筛选结果中的起始序号，再点击“复习”。
+- 底部筛选“全部、未学、不懂、认识、掌握”，选择后从该分类第一个词开始；各选项显示实时数量。
 - 新词显示时隐藏释义，并自动播放已有英音；缺失英音时保持静音，不使用美音替代。
 - 点击“释义”显示全部义项。可以手动滚动，也可以不查看释义直接评价。
 - 点击“不懂、认识、掌握”保存并进入下一词；`‹`、`›` 只导航，不评价。
-- 退回已评价词后再次评价，覆盖状态，评价次数加一次。完成后 `‹` 可返回最后一个词纠正评价。
+- 退回已评价词后再次评价，只覆盖当前状态，不记录评价次数。完成后 `‹` 可返回最后一个词纠正评价。
 - UK/US 按钮分别播放单词及例句本地音频；缺失时禁用。软件不联网下载、不合成语音。
 
 ## 数据
 
-每本词库采用含 `words` 数组的 JSON 对象。每词必选 `wid`、`word`、`phonetic`，每个 `senses` 义项必选 `chinese_meaning`。其他已知字段可省略，未知字段允许存在但不导入；不接受注释、尾随逗号和重复键。
+每本词库采用含 `words` 数组的 JSON 对象。每词必选 `word`、`phonetic_uk`、`phonetic_us` 和非空 `senses`，每个义项必选非空 `pos`、`chinese_meaning`。两个音标字段允许空字符串。其他已知字段可省略，未知字段允许存在但不导入；不接受注释、尾随逗号和重复键。
 
-义项支持词性、中英文释义、语域标签、例句及译文、同义词、反义词、搭配；单词支持 Notes、Etymology。`schema_version` 可省略，提供时为任意正整数。没有 `name` 时按词库文件名显示。完整字段及音频结构见 [实现方案](docs/superpowers/plans/2026-10-04-recitewords-implementation-plan.md)。
+义项支持词性、中英文释义、语域标签、例句及译文、同义词、反义词、搭配；单词支持 Notes、Etymology。`schema_version` 可省略，提供时为任意正整数。没有 `name` 时按词库文件名显示。
+
+本次为破坏性升级：删除 `wid`，用标准化后的 `word` 关联进度，不兼容旧 `phonetic`；未知字段仍忽略，不能代替必填字段。完整规则见 [单词本格式 skill](docs/skills/recitewords-wordlist-format/SKILL.md)。
 
 ```text
 WordLists/
   education.json
   education/
-    audio.json
     examples.json
-    audio/...
+    audio/loyalty_uk.mp3
+    audio/loyalty_us.mp3
     examples/...
   userdata/
     education.progress.json
 ```
 
-每次打开时读取对应 `userdata/<文件名去掉扩展名>.progress.json`；缺少目录或文件则自动初始化。记录使用 wid，不依赖单词数组位置。Python 的旧记录不会被读取或覆盖。
+每次打开时读取对应 `userdata/<文件名去掉扩展名>.progress.json`；缺少目录或文件则自动初始化。记录使用去除首尾空白并经过 Unicode casefold 的 word，不依赖单词数组位置。Python 的旧记录不会被读取或覆盖。
 
 损坏记录仅提示错误并禁止提交进度，用户自行修复或移走损坏文件；没有自动恢复或重置入口。词库改名后按新名称查找或新建记录，不迁移旧文件。
+
+进度只接收版本 2，删除 `review_count`、`position` 和持久化会话，只保存单词当前状态；重新打开从全部分类第一词建立新队列。旧进度读取失败，程序不迁移或覆盖。见 [学习进度格式](docs/Progress-Format.md)。
+
+音频主体 stem 由 word 去除首尾空白后，把每个 `[^0-9a-zA-Z]` 字符替换为 `_` 得到；不合并下划线、不转换大小写。导入时拒绝转换后不区分大小写的文件名冲突。显示和进度键不变。
+
+单词音频直接读取同名子目录 `audio/` 中的 `{stem}_uk.mp3/.wav` 和 `{stem}_us.mp3/.wav`，MP3 优先，不再读取 audio.json。例句仍通过 examples.json 和 eid 关联。
 
 ## 构建与测试
 
@@ -76,3 +84,5 @@ dotnet publish ReciteWords -c Release --self-contained false -p:DebugType=None -
 Unicode 拼写匹配采用随程序嵌入的 Unicode 15.1 casefold 数据，保持 Python 格式的大小写比较语义。`tools/generate_case_folding.py` 仅是开发时的数据生成工具；发布程序不依赖 Python。
 
 本轮审查、整改理由和验证范围见 [代码审查报告](docs/Code-Review.md)。
+
+设计目的、模块功能、新格式规范及其他说明见 [文档索引](docs/README.md)。

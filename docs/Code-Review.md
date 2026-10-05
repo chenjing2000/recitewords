@@ -1,3 +1,5 @@
+> 本文记录格式升级前的审查与交付。当前协议以格式 skill、Progress-Format.md 和 Getting-Started.md 为准；升级结果见 Format-Upgrade.md。
+
 # 代码审查与整改
 
 ## 结论与边界

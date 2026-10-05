@@ -53,7 +53,7 @@ public partial class MainWindow : Window
         for (int index = 0; index < LayoutRoot.RowDefinitions.Count; index++)
             if (index != 3) fixedHeight += LayoutRoot.RowDefinitions[index].ActualHeight;
         // Keep the fixed rows intact and leave four 20-DIP text lines inside the padded viewport.
-        double minimumWidth = Math.Ceiling(Math.Max(222, reviewWidth) + chromeWidth);
+        double minimumWidth = Math.Ceiling(Math.Max(Math.Max(222, reviewWidth), PhoneticRow.DesiredSize.Width) + chromeWidth);
         double minimumHeight = Math.Ceiling(fixedHeight + DefinitionBorder.MinHeight + chromeHeight);
         if (MinWidth != minimumWidth) MinWidth = minimumWidth;
         if (MinHeight != minimumHeight) MinHeight = minimumHeight;

@@ -86,7 +86,7 @@ public class MainViewModel : INotifyPropertyChanged, IDisposable
         set
         {
             if (value == selectedFilter) return;
-            if (loaded && progressWritable) Update(() => session.Start(value, 1));
+            if (loaded && progressWritable) { session.Start(value, 1); PublishCurrent(); }
             else
             {
                 if (!loaded) selectedFilter = value;
@@ -109,7 +109,8 @@ public class MainViewModel : INotifyPropertyChanged, IDisposable
             return "本轮复习完成";
         }
     }
-    public string Phonetic => CurrentWord?.Phonetic ?? "";
+    public string phonetic_uk => CurrentWord == null ? "" : CurrentWord.phonetic_uk.Length == 0 ? "—" : CurrentWord.phonetic_uk;
+    public string phonetic_us => CurrentWord == null ? "" : CurrentWord.phonetic_us.Length == 0 ? "—" : CurrentWord.phonetic_us;
     public void SelectFolder(string folder)
     {
         ScanResult result;
@@ -159,7 +160,7 @@ public class MainViewModel : INotifyPropertyChanged, IDisposable
     public void Navigate(int offset)
     {
         if (!loaded || !progressWritable || (offset == -1 && !session.CanMovePrevious) || (offset == 1 && !session.CanMoveNext)) return;
-        Update(() => session.Move(offset));
+        session.Move(offset); PublishCurrent();
     }
     public void Rate(StudyLevel level)
     {
@@ -170,7 +171,7 @@ public class MainViewModel : INotifyPropertyChanged, IDisposable
     {
         var before = session.Capture();
         action();
-        try { progress.Save(selectedWordList!.Path, session.Capture()); }
+        try { progress.Save(selectedWordList!.Path, session.GetProgress()); }
         catch (Exception ex) when (FileError(ex))
         {
             session.Restore(before);

@@ -1,3 +1,5 @@
+> 本文记录格式升级前的审查与交付。当前协议以格式 skill、Progress-Format.md 和 Getting-Started.md 为准；升级结果见 Format-Upgrade.md。
+
 # 实施结果
 
 当前交付：`artifacts/app/ReciteWords.exe`，采用 .NET 10 / WPF / 简单 MVVM；本机 Windows Desktop Runtime 10.0.11，SDK 10.0.400。无第三方 NuGet 包或数据库，运行时不依赖 Python。
