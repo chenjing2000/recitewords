@@ -55,11 +55,18 @@ public partial class MainWindow : Window
         }
         double chromeWidth = ActualWidth - LayoutRoot.ActualWidth;
         double chromeHeight = ActualHeight - LayoutRoot.ActualHeight;
+        double phoneticWidth = Math.Max(0, MaxWidth - chromeWidth);
+        // 为两个喇叭和标签间距保留 74 DIP，超长音标不能扩大窗口上限。
+        double labelWidth = Math.Max(0, (phoneticWidth - 74) / 2);
+        if (UkPhoneticLabel.MaxWidth != labelWidth) UkPhoneticLabel.MaxWidth = labelWidth;
+        if (UsPhoneticLabel.MaxWidth != labelWidth) UsPhoneticLabel.MaxWidth = labelWidth;
         double fixedHeight = 0;
         for (int index = 0; index < LayoutRoot.RowDefinitions.Count; index++)
             if (index != 3) fixedHeight += LayoutRoot.RowDefinitions[index].ActualHeight;
         // 保持固定行高度，释义外框至少为正文的 5em。
-        double minimumWidth = Math.Ceiling(Math.Max(Math.Max(222, reviewWidth), PhoneticRow.DesiredSize.Width) + chromeWidth);
+        double rowWidth = Math.Min(PhoneticRow.DesiredSize.Width, phoneticWidth);
+        double contentWidth = Math.Max(Math.Max(222, reviewWidth), rowWidth);
+        double minimumWidth = Math.Min(MaxWidth, Math.Ceiling(contentWidth + chromeWidth));
         double minimumHeight = Math.Ceiling(fixedHeight + DefinitionBorder.MinHeight + chromeHeight);
         if (MinWidth != minimumWidth) MinWidth = minimumWidth;
         if (MinHeight != minimumHeight) MinHeight = minimumHeight;

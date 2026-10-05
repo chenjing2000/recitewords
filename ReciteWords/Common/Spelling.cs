@@ -14,7 +14,7 @@ public static class Spelling
     }
     private static Dictionary<int, string> LoadCaseFolding()
     {
-        // Frozen Unicode data preserves the Python input format's full casefold rule.
+        // 固定映射让词库重复检测和进度键使用相同的 Unicode casefold 规则。
         using var stream = typeof(Spelling).Assembly.GetManifestResourceStream("ReciteWords.Resources.CaseFolding.json")!;
         return JsonSerializer.Deserialize<Dictionary<int, string>>(stream)!;
     }

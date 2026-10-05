@@ -41,7 +41,7 @@ internal static partial class Program
             string file = ProgressRepository.ProgressPath(path); Directory.CreateDirectory(Path.GetDirectoryName(file)!);
             File.WriteAllText(file, "{\"application\":\"ReciteWords\",\"schema_version\":2,\"words\":{\"loyalty\":\"Familiar\"}}");
             var repository = new ProgressRepository();
-            var progress = repository.LoadOrCreate(path, ThreeWords()); repository.Save(path, progress);
+            var progress = repository.LoadOrCreate(path); repository.Save(path, progress);
             using var document = JsonDocument.Parse(File.ReadAllText(file));
             Equal("Familiar", document.RootElement.GetProperty("words").GetProperty("loyalty").GetString());
             Equal(false, document.RootElement.TryGetProperty("session", out _));

@@ -6,7 +6,7 @@ namespace ReciteWords.Storage;
 public class ProgressRepository : IProgressRepository
 {
     public static string ProgressPath(string path) => Path.Combine(Path.GetDirectoryName(Path.GetFullPath(path))!, "userdata", Path.GetFileNameWithoutExtension(path) + ".progress.json");
-    public ReviewProgress LoadOrCreate(string path, WordList words)
+    public ReviewProgress LoadOrCreate(string path)
     {
         string file = ProgressPath(path);
         if (!File.Exists(file)) { var initial = new ReviewProgress(); Save(path, initial); return initial; }

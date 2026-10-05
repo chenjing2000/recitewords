@@ -5,7 +5,7 @@ public interface IReviewSession
 {
     void Load(WordList words, ReviewProgress progress);
     int GetCount(ReviewFilter filter);
-    bool Start(ReviewFilter filter, int number);
+    bool Start(ReviewFilter filter);
     bool Move(int offset);
     void Rate(StudyLevel level);
     ReviewProgress GetProgress();

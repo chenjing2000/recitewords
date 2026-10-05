@@ -18,28 +18,28 @@ internal static partial class Program
             string path = Write("education.json", Minimal);
             var python = Path.Combine(Temp, "education"); Directory.CreateDirectory(python);
             File.WriteAllText(Path.Combine(python, "progress.json"), "python untouched");
-            var progress = repository.LoadOrCreate(path, ThreeWords());
+            var progress = repository.LoadOrCreate(path);
             Equal(true, File.Exists(ProgressRepository.ProgressPath(path))); Equal(0, progress.Words.Count);
             Equal("python untouched", File.ReadAllText(Path.Combine(python, "progress.json")));
         });
         Check("save and reopen only restores current status", () => {
             string path = Write("saved.json", Minimal);
-            var progress = repository.LoadOrCreate(path, ThreeWords()); progress.Words["a"] = StudyLevel.Mastered; repository.Save(path, progress);
-            Equal(StudyLevel.Mastered, repository.LoadOrCreate(path, ThreeWords()).Words["a"]);
+            var progress = repository.LoadOrCreate(path); progress.Words["a"] = StudyLevel.Mastered; repository.Save(path, progress);
+            Equal(StudyLevel.Mastered, repository.LoadOrCreate(path).Words["a"]);
             using var document = JsonDocument.Parse(File.ReadAllText(ProgressRepository.ProgressPath(path)));
             Equal(3, document.RootElement.EnumerateObject().Count());
             Equal("Mastered", document.RootElement.GetProperty("words").GetProperty("a").GetString());
             Equal(false, document.RootElement.TryGetProperty("session", out _));
         });
         Check("different wordlists isolated and rename creates", () => {
-            string path = Write("first.json", Minimal); var first = repository.LoadOrCreate(path, ThreeWords());
+            string path = Write("first.json", Minimal); var first = repository.LoadOrCreate(path);
             first.Words["a"] = StudyLevel.Unknown; repository.Save(path, first);
-            Equal(0, repository.LoadOrCreate(Write("renamed.json", Minimal), ThreeWords()).Words.Count);
-            Equal(1, repository.LoadOrCreate(path, ThreeWords()).Words.Count);
+            Equal(0, repository.LoadOrCreate(Write("renamed.json", Minimal)).Words.Count);
+            Equal(1, repository.LoadOrCreate(path).Words.Count);
         });
         Check("corrupt progress never overwritten", () => {
             string path = Write("corrupt.json", Minimal); string file = ProgressRepository.ProgressPath(path);
-            File.WriteAllText(file, "{broken"); Reject(() => repository.LoadOrCreate(path, ThreeWords())); Equal("{broken", File.ReadAllText(file));
+            File.WriteAllText(file, "{broken"); Reject(() => repository.LoadOrCreate(path)); Equal("{broken", File.ReadAllText(file));
         });
         foreach (string text in new[] {
             "{\"application\":\"ReciteWords\",\"schema_version\":1,\"words\":{},\"session\":{}}",
@@ -51,10 +51,10 @@ internal static partial class Program
         })
             Check("invalid or legacy progress is not overwritten: " + text, () => {
                 string path = Write("invalid-progress.json", Minimal); string file = ProgressRepository.ProgressPath(path);
-                File.WriteAllText(file, text); Reject(() => repository.LoadOrCreate(path, ThreeWords())); Equal(text, File.ReadAllText(file));
+                File.WriteAllText(file, text); Reject(() => repository.LoadOrCreate(path)); Equal(text, File.ReadAllText(file));
             });
         Check("failed atomic save leaves original bytes", () => {
-            string path = Write("locked.json", Minimal); var progress = repository.LoadOrCreate(path, ThreeWords()); string file = ProgressRepository.ProgressPath(path);
+            string path = Write("locked.json", Minimal); var progress = repository.LoadOrCreate(path); string file = ProgressRepository.ProgressPath(path);
             string before = File.ReadAllText(file);
             using (var handle = File.Open(file, FileMode.Open, FileAccess.Read, FileShare.Read))
             {
@@ -73,16 +73,16 @@ internal static partial class Program
             Equal(StudyLevel.Unknown, session.GetProgress().Words["a"]); Equal(1, session.GetProgress().Words.Count); Equal("b", session.CurrentWord!.Text);
         });
         Check("filtered snapshot survives status changes", () => {
-            var session = new ReviewSession(); session.Load(ThreeWords(), new ReviewProgress()); session.Start(ReviewFilter.Unseen, 1);
+            var session = new ReviewSession(); session.Load(ThreeWords(), new ReviewProgress()); session.Start(ReviewFilter.Unseen);
             session.Rate(StudyLevel.Familiar); Equal(3, session.Count); session.Move(-1); Equal("a", session.CurrentWord!.Text); Equal(2, session.GetCount(ReviewFilter.Unseen));
         });
         Check("completion back to last and repeat", () => {
-            var session = new ReviewSession(); session.Load(ThreeWords(), new ReviewProgress()); session.Start(ReviewFilter.All, 99);
+            var session = new ReviewSession(); session.Load(ThreeWords(), new ReviewProgress()); session.Move(1); session.Move(1);
             Equal("c", session.CurrentWord!.Text); session.Rate(StudyLevel.Mastered); Equal(true, session.Completed);
             Equal(true, session.Move(-1)); Equal("c", session.CurrentWord!.Text); session.Rate(StudyLevel.Unknown); Equal(true, session.Completed);
         });
         Check("deep snapshot rollback preserves queue and position", () => {
-            var session = new ReviewSession(); session.Load(ThreeWords(), new ReviewProgress()); session.Start(ReviewFilter.Unseen, 2);
+            var session = new ReviewSession(); session.Load(ThreeWords(), new ReviewProgress()); session.Start(ReviewFilter.Unseen); session.Move(1);
             var snapshot = session.Capture(); session.Rate(StudyLevel.Familiar); Equal(0, snapshot.Progress.Words.Count);
             session.Restore(snapshot); Equal("b", session.CurrentWord!.Text); Equal(ReviewFilter.Unseen, session.Filter); Equal(0, session.GetProgress().Words.Count);
         });
@@ -97,9 +97,9 @@ internal static partial class Program
             Equal(StudyLevel.Mastered, session.GetProgress().Words["strasse"]);
             words.Words[0].Text = "STRASSE"; session.Load(words, session.GetProgress()); Equal(1, session.GetCount(ReviewFilter.Mastered));
         });
-        Check("empty filter and clamped start", () => {
-            var session = new ReviewSession(); session.Load(ThreeWords(), new ReviewProgress()); Equal(false, session.Start(ReviewFilter.Mastered, 1)); Equal(false, session.Move(-1));
-            session.Start(ReviewFilter.All, 0); Equal("a", session.CurrentWord!.Text); Equal(false, session.Move(-1));
+        Check("empty filter and restart from first word", () => {
+            var session = new ReviewSession(); session.Load(ThreeWords(), new ReviewProgress()); Equal(false, session.Start(ReviewFilter.Mastered)); Equal(false, session.Move(-1));
+            session.Start(ReviewFilter.All); Equal("a", session.CurrentWord!.Text); Equal(false, session.Move(-1));
         });
     }
 }

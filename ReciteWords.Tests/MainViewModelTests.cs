@@ -25,7 +25,7 @@ internal static partial class Program
     {
         public bool FailSave;
         public int Saves;
-        public ReviewProgress LoadOrCreate(string path, WordList words)
+        public ReviewProgress LoadOrCreate(string path)
         {
             return new ReviewProgress();
         }
@@ -35,6 +35,30 @@ internal static partial class Program
     {
         string folder = Path.Combine(Temp, "vm"); Directory.CreateDirectory(folder);
         File.WriteAllText(Path.Combine(folder, "sample.json"), "{\"words\":[{\"word\":\"a\",\"phonetic_uk\":\"\",\"phonetic_us\":\"\",\"senses\":[{\"pos\":\"n.\",\"chinese_meaning\":\"甲\"}]},{\"word\":\"b\",\"phonetic_uk\":\"\",\"phonetic_us\":\"\",\"senses\":[{\"pos\":\"n.\",\"chinese_meaning\":\"乙\"}]}]}");
+        Check("folder without valid wordlists is remembered after restart", () => {
+            string emptyFolder = Path.Combine(Temp, "empty-folder"); Directory.CreateDirectory(emptyFolder);
+            File.WriteAllText(Path.Combine(emptyFolder, "bad.json"), "{}");
+            var settings = new SettingsRepository(Path.Combine(Temp, "remember-folder.tmp"));
+            using (var vm = new MainViewModel(new WordListRepository(), new TestProgress(), settings, new ReviewSession(), new TestCatalog(), new TestPlayer(), _ => { }))
+            {
+                vm.SelectFolder(folder); vm.SelectFolder(emptyFolder);
+                Equal(0, vm.WordLists.Count); Equal<Word?>(null, vm.CurrentWord);
+                Equal(emptyFolder, settings.Load().Folder); Equal("", settings.Load().WordListFile);
+            }
+            using var reopened = new MainViewModel(new WordListRepository(), new TestProgress(), settings, new ReviewSession(), new TestCatalog(), new TestPlayer(), _ => { });
+            reopened.Initialize(folder); Equal(0, reopened.WordLists.Count); Equal(emptyFolder, reopened.Settings.Folder);
+        });
+        Check("invalid wordlist warning cannot mask corrupt progress", () => {
+            string errorFolder = Path.Combine(Temp, "opening-errors"); Directory.CreateDirectory(errorFolder);
+            string path = Path.Combine(errorFolder, "valid.json"); File.WriteAllText(path, Minimal);
+            File.WriteAllText(Path.Combine(errorFolder, "bad.json"), "{}");
+            string progressFile = ProgressRepository.ProgressPath(path); Directory.CreateDirectory(Path.GetDirectoryName(progressFile)!);
+            File.WriteAllText(progressFile, "{broken");
+            using var vm = new MainViewModel(new WordListRepository(), new ProgressRepository(), new SettingsRepository(Path.Combine(Temp, "opening-errors.tmp")), new ReviewSession(), new TestCatalog(), new TestPlayer(), _ => { });
+            vm.SelectFolder(errorFolder);
+            Equal(true, vm.Warning.Contains("学习记录无法读取")); Equal(false, vm.UnknownCommand.CanExecute(null));
+            Equal("{broken", File.ReadAllText(progressFile)); Equal("aware", vm.CurrentWord!.Text);
+        });
         Check("filter counts update after rating, rerating, failure and reload", () => {
             var progress = new TestProgress();
             using var vm = new MainViewModel(new WordListRepository(), progress, new SettingsRepository(Path.Combine(folder, "counts.tmp")), new ReviewSession(), new TestCatalog(), new TestPlayer(), _ => { });

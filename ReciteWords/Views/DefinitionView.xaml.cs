@@ -33,9 +33,9 @@ public partial class DefinitionView : UserControl
         if (Word == null) return;
         foreach (var sense in Word.Senses)
         {
-            var heading = CreateParagraph(sense.Pos.Length > 0 || sense.Register.Count > 0, 10);
+            var heading = CreateParagraph(true, 10);
             heading.Foreground = new SolidColorBrush(Color.FromRgb(200, 22, 29));
-            if (sense.Pos.Length > 0) heading.Inlines.Add(new Run(sense.Pos + "  ") { FontWeight = FontWeights.SemiBold });
+            heading.Inlines.Add(new Run(sense.Pos + "  ") { FontWeight = FontWeights.SemiBold });
             if (sense.Register.Count > 0) heading.Inlines.Add(new Run("[" + string.Join(" · ", sense.Register) + "]  ") { Foreground = new SolidColorBrush(Color.FromRgb(87, 116, 136)) });
             if (sense.EnglishMeaning.Length > 0) { heading.Inlines.Add(new Run(sense.EnglishMeaning)); heading.Inlines.Add(new LineBreak()); }
             heading.Inlines.Add(new Run(sense.ChineseMeaning)); document.Blocks.Add(heading);

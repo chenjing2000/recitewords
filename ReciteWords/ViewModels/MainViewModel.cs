@@ -86,7 +86,7 @@ public class MainViewModel : INotifyPropertyChanged, IDisposable
         set
         {
             if (value == selectedFilter) return;
-            if (loaded && progressWritable) { session.Start(value, 1); PublishCurrent(); }
+            if (loaded && progressWritable) { session.Start(value); PublishCurrent(); }
             else
             {
                 if (!loaded) selectedFilter = value;
@@ -110,8 +110,24 @@ public class MainViewModel : INotifyPropertyChanged, IDisposable
             return "本轮复习完成";
         }
     }
-    public string phonetic_uk => CurrentWord == null ? "" : CurrentWord.phonetic_uk.Length == 0 ? "—" : CurrentWord.phonetic_uk;
-    public string phonetic_us => CurrentWord == null ? "" : CurrentWord.phonetic_us.Length == 0 ? "—" : CurrentWord.phonetic_us;
+    public string phonetic_uk
+    {
+        get
+        {
+            if (CurrentWord == null) return "";
+            if (CurrentWord.phonetic_uk.Length == 0) return "—";
+            return CurrentWord.phonetic_uk;
+        }
+    }
+    public string phonetic_us
+    {
+        get
+        {
+            if (CurrentWord == null) return "";
+            if (CurrentWord.phonetic_us.Length == 0) return "—";
+            return CurrentWord.phonetic_us;
+        }
+    }
     public void SelectFolder(string folder)
     {
         ScanResult result;
@@ -128,13 +144,19 @@ public class MainViewModel : INotifyPropertyChanged, IDisposable
         Notify();
         if (WordLists.Count > 0)
         {
+            if (result.Errors.Count > 0) Warn("已跳过无效文件：\n" + string.Join("\n", result.Errors));
             WordListEntry choice = WordLists[0];
             if (string.Equals(folder, Settings.Folder, StringComparison.OrdinalIgnoreCase))
                 foreach (var entry in WordLists) if (Path.GetFileName(entry.Path) == Settings.WordListFile) choice = entry;
             OpenWordList(choice);
         }
-        else Warn("当前文件夹中没有有效单词本。" + (result.Errors.Count > 0 ? "\n" + string.Join("\n", result.Errors) : ""));
-        if (result.Errors.Count > 0 && WordLists.Count > 0) Warn("已跳过无效文件：\n" + string.Join("\n", result.Errors));
+        else
+        {
+            Settings.Folder = Path.GetFullPath(folder);
+            Settings.WordListFile = "";
+            Warn("当前文件夹中没有有效单词本。" + (result.Errors.Count > 0 ? "\n" + string.Join("\n", result.Errors) : ""));
+            SaveSettings();
+        }
     }
     public void OpenWordList(WordListEntry entry)
     {
@@ -144,7 +166,7 @@ public class MainViewModel : INotifyPropertyChanged, IDisposable
         selectedWordList = entry;
         ReviewProgress data;
         string? progressError = null;
-        try { data = progress.LoadOrCreate(entry.Path, wordList); progressWritable = true; }
+        try { data = progress.LoadOrCreate(entry.Path); progressWritable = true; }
         catch (Exception ex) when (FileError(ex))
         { data = new ReviewProgress(); progressWritable = false; progressError = "学习记录无法读取或初始化，请自行检查对应 userdata 文件：" + ex.Message; }
         session.Load(wordList, data);
@@ -165,12 +187,8 @@ public class MainViewModel : INotifyPropertyChanged, IDisposable
     public void Rate(StudyLevel level)
     {
         if (!CanRate()) return;
-        Update(() => session.Rate(level));
-    }
-    private void Update(Action action)
-    {
         var before = session.Capture();
-        action();
+        session.Rate(level);
         try { progress.Save(selectedWordList!.Path, session.GetProgress()); }
         catch (Exception ex) when (FileError(ex))
         {

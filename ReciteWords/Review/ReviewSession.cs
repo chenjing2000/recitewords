@@ -16,7 +16,7 @@ public class ReviewSession : IReviewSession
     {
         wordList = words;
         state = new ReviewSnapshot { Progress = CopyProgress(progress) };
-        Start(ReviewFilter.All, 1);
+        Start(ReviewFilter.All);
     }
     private bool Matches(Word word, ReviewFilter filter)
     {
@@ -34,11 +34,11 @@ public class ReviewSession : IReviewSession
         foreach (var word in wordList.Words) if (Matches(word, filter)) count++;
         return count;
     }
-    public bool Start(ReviewFilter filter, int number)
+    public bool Start(ReviewFilter filter)
     {
         state.Filter = filter; state.Queue = new List<Word>();
         foreach (var word in wordList.Words) if (Matches(word, filter)) state.Queue.Add(word);
-        state.Position = Count == 0 ? 0 : Math.Clamp(number, 1, Count) - 1;
+        state.Position = 0;
         state.Completed = Count == 0;
         return Count > 0;
     }

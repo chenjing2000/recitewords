@@ -26,13 +26,13 @@
 
 `MainViewModel` 依赖 `IWordListRepository`、`IProgressRepository`、`ISettingsRepository`、`IReviewSession`、`IAudioCatalog`、`IAudioPlayer`。这些接口对应实际模块边界，既便于替换测试对象，也避免界面层依赖具体文件和播放实现。
 
-Models 是共同数据协议，Common 是低层共享工具。Storage、Review、Audio 各自依赖所需数据和工具，不通过调用另一个模块的具体实现来绕过接口。Views 可以使用 WPF 控件与 ViewModel，但 Review 不依赖 WPF。
+Models 是共同数据协议，Common 是低层共享工具。Storage、Review、Audio 各自依赖所需数据和工具，不通过调用另一个模块的具体实现来绕过接口。Views 可以使用 WPF 控件与 ViewModel，但 Review 不依赖 WPF。Rate 直接编排快照、评价、保存和失败回滚，不经过通用更新回调。
 
 接口并不意味着为每个类建立接口；简单数据类、JSON 辅助函数、样式和控件无需额外包装。
 
 ## 打开单词本
 
-1. App 组装服务，MainViewModel 读取设置，确定默认目录或上次目录。
+1. App 组装服务，MainViewModel 读取设置，确定默认目录或上次目录；选择没有有效词库的目录也会记住该目录。
 2. WordListRepository 扫描、验证词库，保留名称与路径；选择后重新读取文件，避免缓存过期的整本词库。
 3. ProgressRepository 查找版本 2 userdata 记录并恢复单词状态，缺少时初始化；ReviewSession 从全部分类第一词建立新的内存队列。
 4. AudioCatalog 接收已经校验的 WordList，确定同名子目录 audio/ 和 examples/，按 words 顺序预留首次 stem；不读取任何音频索引 JSON。
@@ -46,7 +46,7 @@ AudioCatalog 不解析 JSON 索引，Load 无需返回配置错误集合；词�
 
 ## 导航、评价与保存
 
-导航和分类选择只改变内存会话，不写文件。评价前 Capture 深复制状态字典和队列到 ReviewSnapshot，再覆盖当前状态并前进；GetProgress 只返回可保存状态，ProgressRepository 写入版本 2 文件。
+导航和分类选择只改变内存会话，不写文件。Start 只接收分类，每次从第一词开始；LoadOrCreate 只接收单词本路径，不接收词库内容。评价前 Capture 深复制状态字典和队列到 ReviewSnapshot，再覆盖当前状态并前进；GetProgress 只返回可保存状态，ProgressRepository 写入版本 2 文件。
 
 成功后更新界面、数量和播放；失败时 Restore 恢复状态、分类、队列、位置与完成标记，不停留在未保存成功的新状态。
 

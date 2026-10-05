@@ -3,6 +3,6 @@ namespace ReciteWords.Storage;
 
 public interface IProgressRepository
 {
-    ReviewProgress LoadOrCreate(string wordListPath, WordList wordList);
+    ReviewProgress LoadOrCreate(string wordListPath);
     void Save(string wordListPath, ReviewProgress progress);
 }

@@ -9,7 +9,7 @@
 | [音频文件规范](Audio-Format.md) | 首次 stem 优先、两位 eid、直接例句文件名和最新界面规则 |
 | [文件格式升级结果](Format-Upgrade.md) | 破坏性升级内容、不兼容边界、skill 同步与验证证据 |
 | [运行与交付](Getting-Started.md) | 当前程序的运行、学习、界面、构建及发布方式 |
-| [代码审查与整改](Code-Review.md) | 上轮审查结果、修复理由、验证与清理范围 |
+| [代码审查与整改](Code-Review.md) | 当前审查结果、整改理由、验证与清理范围 |
 | [实施结果](Implementation-Report.md) | 上轮交付与验证记录 |
 | [原始实施方案](superpowers/plans/2026-10-04-recitewords-implementation-plan.md) | 历史设计依据，部分字段与界面已被后续决定替代 |
 
@@ -23,4 +23,4 @@ skill 作为项目文档保存在本目录，可把内容提供给 LLM，或明�
 
 原有 `C:/pywork/words_review/skills/ielts-wordlist-generator/SKILL.md` 也已同步新字段和音频命名规则。
 
-音频主体 stem 的字符替换、首次 stem 优先与词组示例见格式 skill；这项转换只影响单词音频文件名。
+音频主体 stem 的字符替换、首次 stem 优先与词组示例见格式 skill；这项转换影响单词和例句的音频文件名，不改变显示文字或进度键。

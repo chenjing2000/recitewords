@@ -202,8 +202,21 @@ internal static partial class Program
             Equal(true, Math.Abs(definitionBorder.ActualHeight - restingDefinitionHeight) < 1);
             Equal(true, Math.Abs(unknown.TranslatePoint(new Point(), window).Y - restingButtonsY) < 1);
             Capture(window, Path.Combine(output, "information-collapsed.png"));
+            string longFolder = Path.Combine(Temp, "long-phonetics"); Directory.CreateDirectory(longFolder);
+            string longPath = Path.Combine(longFolder, "long-phonetic.json");
+            string longPhonetic = "/" + new string('a', 300) + "/";
+            File.WriteAllText(longPath, Minimal.Replace("/əˈweə/", longPhonetic).Replace("/əˈwer/", longPhonetic));
+            vm.SelectFolder(longFolder); Pump(); window.UpdateLayout();
+            Equal(true, window.MinWidth <= window.MaxWidth);
+            Equal(true, window.ActualWidth <= window.MaxWidth + 1);
+            Equal(longPhonetic, ukLabel.ToolTip); Equal(longPhonetic, usLabel.ToolTip);
+            foreach (var button in new[] { wordUk, wordUs })
+                Equal(true, button.TranslatePoint(new Point(), root).X + button.ActualWidth <= root.ActualWidth + 1);
+            window.Left += 1; Pump();
+            Capture(window, Path.Combine(output, "long-phonetic.png"));
+            vm.SelectFolder(folder); Pump();
             window.Close();
-            var restored = new ReviewSession(); restored.Load(new WordListRepository().Load(Path.Combine(folder, "sample.json")), new ProgressRepository().LoadOrCreate(Path.Combine(folder, "sample.json"), new WordListRepository().Load(Path.Combine(folder, "sample.json"))));
+            var restored = new ReviewSession(); restored.Load(new WordListRepository().Load(Path.Combine(folder, "sample.json")), new ProgressRepository().LoadOrCreate(Path.Combine(folder, "sample.json")));
             Equal("cognizant", restored.CurrentWord!.Text); Equal(ReciteWords.Models.StudyLevel.Unknown, restored.GetProgress().Words["cognizant"]);
             File.WriteAllText(Path.Combine(output, "ui-report.txt"), $"Window DIP: {window.ActualWidth} x {window.ActualHeight}; max {window.MaxWidth} x {window.MaxHeight}\nSample: 6 words; rating and reopen passed.\n");
             app.Shutdown();
