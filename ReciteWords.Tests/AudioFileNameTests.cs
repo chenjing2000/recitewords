@@ -15,9 +15,9 @@ internal static partial class Program
     static void AudioFileNameTests()
     {
         Check("phrase and punctuation audio names use individual underscores", () => {
-            string path = Write("phrases.json", PhraseList("one's own"));
+            string path = Write("phrases.json", PhraseList("take care of", "one's own", "well-being", "a / b", "_A!", "café"));
             string folder = Path.Combine(Temp, "phrases", "audio"); Directory.CreateDirectory(folder);
-            var catalog = new AudioCatalog(); catalog.Load(path);
+            var catalog = new AudioCatalog(); LoadCatalog(catalog, path);
             foreach (var pair in new[] { (" take care of ", "take_care_of"), ("one's own", "one_s_own"), ("well-being", "well_being"), ("a / b", "a___b"), ("_A!", "_A_"), ("café", "caf_") })
             {
                 string file = Path.Combine(folder, pair.Item2 + "_uk.mp3"); File.WriteAllText(file, "fixture");
@@ -27,14 +27,9 @@ internal static partial class Program
             }
         });
         foreach (var pair in new[] { ("well-being", "well being"), ("one's own", "one_s_own"), ("A-B", "a b") })
-            Check("normalized audio name collision rejected: " + pair.Item1, () => {
+            Check("normalized audio name collision remains readable: " + pair.Item1, () => {
                 string path = Write("collision.json", PhraseList(pair.Item1, pair.Item2));
-                try { new WordListRepository().Load(path); }
-                catch (InvalidDataException ex)
-                {
-                    Equal(true, ex.Message.Contains(pair.Item1)); Equal(true, ex.Message.Contains(pair.Item2)); return;
-                }
-                throw new Exception("Audio name collision was accepted");
+                Equal(2, new WordListRepository().Load(path).Words.Count);
             });
         Check("phrase spelling and progress key remain unchanged", () => {
             var words = new WordListRepository().Load(Write("phrase-state.json", PhraseList("one's own")));

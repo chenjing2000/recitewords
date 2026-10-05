@@ -50,19 +50,19 @@ internal static partial class Program
             string path = Write("direct-audio.json", json);
             string folder = Path.Combine(Temp, "direct-audio", "audio"); Directory.CreateDirectory(folder);
             string file = Path.Combine(folder, "loyalty_uk.mp3"); File.WriteAllText(file, "fixture");
-            var catalog = new AudioCatalog(); catalog.Load(path);
+            var catalog = new AudioCatalog(); LoadCatalog(catalog, path);
             Equal(file, catalog.FindWord("loyalty", "uk")); Equal<string?>(null, catalog.FindWord("loyalty", "us"));
         });
         Check("word audio prefers mp3 then wav and ignores old index", () => {
             string path = Write("audio-names.json", json);
             string folder = Path.Combine(Temp, "audio-names", "audio"); Directory.CreateDirectory(folder);
             string wav = Path.Combine(folder, "loyalty_us.wav"); File.WriteAllText(wav, "fixture");
-            var catalog = new AudioCatalog(); catalog.Load(path); Equal(wav, catalog.FindWord("loyalty", "us"));
+            var catalog = new AudioCatalog(); LoadCatalog(catalog, path); Equal(wav, catalog.FindWord("loyalty", "us"));
             string mp3 = Path.Combine(folder, "loyalty_us.mp3"); File.WriteAllText(mp3, "fixture"); Equal(mp3, catalog.FindWord("loyalty", "us"));
             File.WriteAllText(Path.Combine(Temp, "audio-names", "audio.json"), "{\"schema_version\":1,\"words\":{\"loyalty\":{\"uk\":[\"audio/loyalty_us.mp3\"]}}}");
-            catalog.Load(path); Equal<string?>(null, catalog.FindWord("loyalty", "uk"));
+            LoadCatalog(catalog, path); Equal<string?>(null, catalog.FindWord("loyalty", "uk"));
             Equal<string?>(null, catalog.FindWord("../loyalty", "us")); Equal<string?>(null, catalog.FindWord("loyalty", "other"));
-            catalog.Load(Write("another-list.json", json)); Equal<string?>(null, catalog.FindWord("loyalty", "us"));
+            LoadCatalog(catalog, Write("another-list.json", json)); Equal<string?>(null, catalog.FindWord("loyalty", "us"));
         });
     }
 }

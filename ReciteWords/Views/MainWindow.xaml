@@ -1,4 +1,5 @@
 <Window x:Class="ReciteWords.Views.MainWindow" xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation" xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml" xmlns:views="clr-namespace:ReciteWords.Views" Style="{StaticResource {x:Type Window}}" Title="ReciteWords" Icon="/ReciteWords;component/ui/mainicon.png" Width="700" Height="850" MinWidth="440" MinHeight="370" WindowStartupLocation="Manual">
+  <Window.Resources><Thickness x:Key="FilterTextIndent">0,0,0,0</Thickness></Window.Resources>
   <Grid x:Name="LayoutRoot" Margin="20">
     <Grid.RowDefinitions><RowDefinition Height="Auto" /><RowDefinition Height="Auto" /><RowDefinition Height="Auto" /><RowDefinition Height="*" /><RowDefinition Height="Auto" /><RowDefinition Height="Auto" /></Grid.RowDefinitions>
     <Grid x:Name="HeaderGrid" Margin="0,0,0,10">
@@ -17,7 +18,7 @@
       <TextBlock x:Name="UsPhoneticLabel" Text="{Binding phonetic_us}" VerticalAlignment="Center" Margin="12,0,6,0" />
       <Button x:Name="WordUsButton" Content="🔊" Command="{Binding UsCommand}" Style="{StaticResource AudioButton}" ToolTip="单词美音" AutomationProperties.Name="播放单词美音" />
     </StackPanel>
-    <Border x:Name="DefinitionBorder" Grid.Row="3" MinHeight="114" Background="White" BorderBrush="#D8E0E9" BorderThickness="1" CornerRadius="9">
+    <Border x:Name="DefinitionBorder" Grid.Row="3" Background="White" BorderBrush="#D8E0E9" BorderThickness="1" CornerRadius="9">
       <Grid>
         <TextBlock Text="先回想词义，再点击“释义”查看。" Foreground="#A1ABB6" HorizontalAlignment="Center" VerticalAlignment="Center" TextWrapping="Wrap" Margin="16">
           <TextBlock.Style><Style TargetType="TextBlock"><Setter Property="Visibility" Value="Visible" /><Style.Triggers><DataTrigger Binding="{Binding DefinitionVisible}" Value="True"><Setter Property="Visibility" Value="Collapsed" /></DataTrigger></Style.Triggers></Style></TextBlock.Style>
@@ -35,7 +36,9 @@
         <ColumnDefinition Width="*" MinWidth="52" /><ColumnDefinition Width="10" />
         <ColumnDefinition Width="*" MinWidth="52" />
       </Grid.ColumnDefinitions>
-      <ComboBox x:Name="ReviewFilterCombo" Width="95" ItemsSource="{Binding Filters}" DisplayMemberPath="Label" SelectedValuePath="Value" SelectedValue="{Binding SelectedFilter, Mode=TwoWay}" Padding="2,3" />
+      <ComboBox x:Name="ReviewFilterCombo" Width="95" ItemsSource="{Binding Filters}" SelectedValuePath="Value" SelectedValue="{Binding SelectedFilter, Mode=TwoWay}" Padding="2,3">
+        <ComboBox.ItemTemplate><DataTemplate><TextBlock Text="{Binding Label}" Margin="{DynamicResource FilterTextIndent}" /></DataTemplate></ComboBox.ItemTemplate>
+      </ComboBox>
       <Button x:Name="PreviousButton" Grid.Column="2" Command="{Binding PreviousCommand}" Padding="0" ToolTip="上一词" AutomationProperties.Name="上一词"><Image Source="{StaticResource PreviousWordIcon}" Width="24" Height="24" /></Button>
       <Button x:Name="NextButton" Grid.Column="4" Command="{Binding NextCommand}" Padding="0" ToolTip="下一词" AutomationProperties.Name="下一词"><Image Source="{StaticResource NextWordIcon}" Width="24" Height="24" /></Button>
       <Button x:Name="ExplanationButton" Grid.Column="6" Command="{Binding RevealCommand}" Padding="0" ToolTip="显示释义" AutomationProperties.Name="显示释义"><Image Source="{StaticResource ExplanationIcon}" Width="24" Height="24" /></Button>

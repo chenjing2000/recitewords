@@ -49,7 +49,7 @@ public partial class DefinitionView : UserControl
             AddParagraph("Collocations", string.Join(" · ", sense.Collocations));
             document.Blocks.Add(new BlockUIContainer(new Border { Height = 1, Background = new SolidColorBrush(Color.FromRgb(234, 239, 244)) }) { Margin = new Thickness(0, 4, 0, 16) });
         }
-        AddParagraph("Notes", Word.Notes); AddParagraph("Etymology", Word.Etymology);
+        AddParagraph("Etymology", Word.Etymology); AddParagraph("Notes", Word.Notes);
     }
     private Paragraph CreateParagraph(bool startsWithField, double bottomMargin)
     {

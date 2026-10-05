@@ -15,6 +15,7 @@ public partial class MainWindow : Window
     public MainWindow(MainViewModel vm)
     {
         this.vm = vm; InitializeComponent(); DataContext = vm;
+        DefinitionBorder.MinHeight = 5 * FontSize;
         vm.FolderRequested += ChooseFolder; vm.WarningChanged += OnWarningChanged;
         vm.PropertyChanged += OnViewModelChanged;
         warningTimer.Tick += (_, _) => { warningTimer.Stop(); vm.ClearWarning(); };
@@ -27,6 +28,11 @@ public partial class MainWindow : Window
     }
     private void UpdateFilterWidth()
     {
+        var space = new FormattedText(" ", CultureInfo.CurrentUICulture, FlowDirection.LeftToRight,
+            new Typeface(FontFamily, FontStyle, FontWeight, FontStretch), FontSize, Brushes.Black,
+            VisualTreeHelper.GetDpi(this).PixelsPerDip);
+        var indent = new Thickness(space.WidthIncludingTrailingWhitespace, 0, 0, 0);
+        if (!Equals(Resources["FilterTextIndent"], indent)) Resources["FilterTextIndent"] = indent;
         double textWidth = 0;
         foreach (var filter in vm.Filters)
         {
@@ -35,7 +41,7 @@ public partial class MainWindow : Window
                 VisualTreeHelper.GetDpi(this).PixelsPerDip);
             textWidth = Math.Max(textWidth, text.WidthIncludingTrailingWhitespace);
         }
-        ReviewFilterCombo.Width = Math.Ceiling(Math.Max(79, textWidth + 24) * 1.2);
+        ReviewFilterCombo.Width = Math.Ceiling(Math.Max(79, textWidth + indent.Left + 24) * 1.2);
     }
     private void UpdateMinimumSize()
     {
@@ -52,7 +58,7 @@ public partial class MainWindow : Window
         double fixedHeight = 0;
         for (int index = 0; index < LayoutRoot.RowDefinitions.Count; index++)
             if (index != 3) fixedHeight += LayoutRoot.RowDefinitions[index].ActualHeight;
-        // Keep the fixed rows intact and leave four 20-DIP text lines inside the padded viewport.
+        // 保持固定行高度，释义外框至少为正文的 5em。
         double minimumWidth = Math.Ceiling(Math.Max(Math.Max(222, reviewWidth), PhoneticRow.DesiredSize.Width) + chromeWidth);
         double minimumHeight = Math.Ceiling(fixedHeight + DefinitionBorder.MinHeight + chromeHeight);
         if (MinWidth != minimumWidth) MinWidth = minimumWidth;

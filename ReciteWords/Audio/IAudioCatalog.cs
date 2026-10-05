@@ -1,12 +1,9 @@
+using ReciteWords.Models;
 namespace ReciteWords.Audio;
 
 public interface IAudioCatalog
 {
-    AudioLoadResult Load(string wordListPath);
+    void Load(string wordListPath, WordList words);
     string? FindWord(string word, string accent);
-    string? FindExample(string eid, string accent);
-}
-public class AudioLoadResult
-{
-    public List<string> Errors { get; } = new List<string>();
+    string? FindExample(string word, string eid, string accent);
 }

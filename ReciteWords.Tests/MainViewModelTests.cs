@@ -17,9 +17,9 @@ internal static partial class Program
     }
     class TestCatalog : IAudioCatalog
     {
-        public AudioLoadResult Load(string path) => new AudioLoadResult();
+        public void Load(string path, WordList words) { }
         public string? FindWord(string word, string accent) => accent == "uk" ? word + "-uk.mp3" : word + "-us.mp3";
-        public string? FindExample(string eid, string accent) => null;
+        public string? FindExample(string word, string eid, string accent) => null;
     }
     class TestProgress : IProgressRepository
     {

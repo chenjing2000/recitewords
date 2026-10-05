@@ -14,7 +14,7 @@ internal static partial class Program
         Directory.CreateDirectory(Temp);
         try
         {
-            AudioFileNameTests(); NewFormatTests(); WordListTests(); ProgressTests(); ReviewTests(); AudioTests(); ViewModelTests(); WindowTests();
+            ExampleFormatTests(); AudioFileNameTests(); NewFormatTests(); WordListTests(); ProgressTests(); ReviewTests(); AudioTests(); ViewModelTests(); WindowTests();
             if (args.Contains("--ui-qa")) UiTests();
             int audioArgument = Array.IndexOf(args, "--mp3");
             if (audioArgument >= 0 && audioArgument + 1 < args.Length)
@@ -76,7 +76,7 @@ internal static partial class Program
         Check("invalid Unicode array value is rejected", () => Reject(() => repo.Load(Write("unicode-array.json", Minimal.Replace("\"word\":", "\"register\":[\"\\ud800\"],\"word\":").Replace("\"chinese_meaning\":", "\"synonyms\":[\"\\ud800\"],\"chinese_meaning\":")))));
         Check("invalid Unicode field name is rejected", () => Reject(() => repo.Load(Write("unicode-name.json", Minimal.Replace("\"words\":", "\"\\ud800\":42,\"words\":")))));
         Check("example without eid allowed", () => Equal("Test", repo.Load(Write("example.json", Minimal.Replace("\"chinese_meaning\":", "\"example\":\"Test\",\"chinese_meaning\":"))).Words[0].Senses[0].Example));
-        Check("eid leading zero retained", () => Equal("001234", repo.Load(Write("eid.json", Minimal.Replace("\"chinese_meaning\":", "\"eid\":\"001234\",\"chinese_meaning\":"))).Words[0].Senses[0].Eid));
+        Check("eid leading zero retained", () => Equal("01", repo.Load(Write("eid.json", Minimal.Replace("\"chinese_meaning\":", "\"eid\":\"01\",\"example\":\"Test\",\"chinese_meaning\":"))).Words[0].Senses[0].Eid));
         Check("scan isolates invalid and ignores subfolders", () => {
             var folder = Path.Combine(Temp, "scan"); Directory.CreateDirectory(folder);
             File.WriteAllText(Path.Combine(folder, "ok.json"), Minimal); File.WriteAllText(Path.Combine(folder, "bad.json"), "{}");

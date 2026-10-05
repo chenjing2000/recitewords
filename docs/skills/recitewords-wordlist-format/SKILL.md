@@ -55,14 +55,14 @@ description: Use when generating, editing, or checking ReciteWords vocabulary JS
 | `chinese_meaning` | 字符串 | 是 | 非空中文释义 |
 | `english_meaning` | 字符串 | 否 | 英文释义 |
 | `register` | 字符串数组 | 否 | 语域标签，例如 `["formal"]` |
-| `eid` | 字符串 | 否 | 例句标识，提供时为六位 ASCII 数字，在整个单词本内唯一；保留前导零 |
+| `eid` | 字符串 | 否 | 当前单词的例句序号，提供时为两位 ASCII 数字，从 01 起；在当前单词内唯一，不要求全词库唯一 |
 | `example` | 字符串 | 否 | 英文例句 |
 | `example_translation` | 字符串 | 否 | 例句中文译文 |
 | `synonyms` | 字符串数组 | 否 | 同义词 |
 | `antonyms` | 字符串数组 | 否 | 反义词 |
 | `collocations` | 字符串数组 | 否 | 搭配 |
 
-每个词义最多使用一组 `eid`、`example`、`example_translation`，不增加 `examples` 数组。没有 `eid` 的例句可以显示，但不能关联例句音频。没有例句时通常省略 `eid`。
+每个词义最多使用一组 `eid`、`example`、`example_translation`，不增加 `examples` 数组。按 senses 顺序只计数非空英文 example，eid 依次为 01、02、03，最多 99 个例句；没有例句的词义不占序号。eid 可省略，此时例句仍显示但无法播放音频；即使前面例句省略 eid，后面仍按实际例句序号编号。提供 eid 时必须有非空 example，不能填写空 eid。不同单词均可使用 01，旧六位 eid 不兼容。
 
 可选字段可直接省略；可选文本除 `eid` 外可为 `""`，字符串数组可为 `[]`。不用 `null` 替代字符串或数组。词性没有限定枚举，但不能遗漏或仅含空白。
 
@@ -74,13 +74,17 @@ description: Use when generating, editing, or checking ReciteWords vocabulary JS
 
 例如 `take care of` → `take_care_of`，`one's own` → `one_s_own`，`well-being` → `well_being`，`a / b` → `a___b`，`café` → `caf_`。对应文件为 `one_s_own_uk.mp3`、`one_s_own_us.mp3`（或同名 WAV）。准备音频文件和程序查找音频必须使用相同转换规则。
 
-导入时按不区分大小写的主体检查文件名冲突。例如 `well-being` 与 `well being` 都变成 `well_being`，整个单词本会被拒绝，并提示两词及冲突主体；不自动追加编号。生成单词本时也检查该冲突。
+同一单词本按 words 数组顺序决定 stem 的首次拥有者，比较时不区分大小写。well-being 和 well being 同为 well_being，但两词都保留在单词本中；只有第一个词有音频资格，后续词跳过所有音频，包括单词英美音和全部例句英美音，不拒绝整本词库、不追加编号。
 
-转换只影响单词音频文件名，word 显示文本及基于 Unicode casefold 的进度键不变。程序不重命名已有音频，也不回退查找带空格或标点的旧文件名；由用户或音频准备工具按新规则命名。例句 eid 和 examples.json 指定路径不执行此替换。
+准备音频时，遍历前先建立空 seen_stems。每遇到一个词，先计算 stem：若已存在，立即跳过该词的全部生成和写入；否则立即加入集合，再尝试生成。首次生成失败、缺失任一口音或尚未写出任何文件，都不能释放 stem 给后面的词。不要通过“文件是否存在”判断是否重复，不从实际成功写入的文件重建资格。
 
-程序直接查找这些文件，不再读取旧 `audio.json`，不从索引指定的任意路径回退。缺失时禁用对应喇叭，不联网下载、不合成；自动发音仅用英音。音标字符串不作为音频文件名。
+转换只影响音频文件名，word 显示文本及基于 Unicode casefold 的进度键不变。程序不重命名已有文件、不按旧名称回退。ReciteWords 只读取本地文件，不执行音频生成；上述写入规则供外部音频准备工具使用。
 
-例句仍用可选 `eid` 精确关联同级 `education/examples.json`，保留该索引版本 1；路径以 `education/` 为基准。此轮不改变例句音频协议，也不要求生成单词本时生成音频索引。
+单词音频目录为 education/audio/；例句音频目录为 education/examples/，文件名为 `{stem}_e{eid}_uk.mp3`、`{stem}_e{eid}_us.mp3`，也支持同名 WAV，MP3 优先。例如 well_being_e01_uk.mp3、well_being_e01_us.mp3、well_being_e02_uk.mp3、well_being_e02_us.mp3。
+
+读取例句必须同时提供 word 与 eid，不能只按 eid 查找。后续重复 stem 的词条不能播放首次词条的任何音频，即使同名文件已经存在。程序不再读取 audio.json 或 examples.json，不查找旧索引指定的任意路径。缺失时禁用对应喇叭，不联网下载、不合成；自动发音仅用英音，音标不作为文件名。
+
+词源 Etymology 在备注 Notes 前显示；JSON 示例也按 etymology、notes 顺序书写。字段名仍为 notes，不改为 note；JSON 对象字段顺序不影响解析。
 
 ## 有效完整示例
 
@@ -100,16 +104,24 @@ description: Use when generating, editing, or checking ReciteWords vocabulary JS
           "chinese_meaning": "忠诚；忠实",
           "english_meaning": "the quality of being faithful to a person, group, or cause",
           "register": [],
-          "eid": "000001",
+          "eid": "01",
           "example": "Her loyalty to the team never changed.",
           "example_translation": "她对团队的忠诚从未改变。",
-          "synonyms": ["faithfulness", "devotion"],
-          "antonyms": ["disloyalty"],
-          "collocations": ["loyalty to", "customer loyalty"]
+          "synonyms": [
+            "faithfulness",
+            "devotion"
+          ],
+          "antonyms": [
+            "disloyalty"
+          ],
+          "collocations": [
+            "loyalty to",
+            "customer loyalty"
+          ]
         }
       ],
-      "notes": "常与 to 连用，表示对某人、组织或事业的忠诚。",
-      "etymology": "由 loyal 加名词后缀 -ty 构成。"
+      "etymology": "由 loyal 加名词后缀 -ty 构成。",
+      "notes": "常与 to 连用，表示对某人、组织或事业的忠诚。"
     }
   ]
 }
@@ -119,10 +131,10 @@ description: Use when generating, editing, or checking ReciteWords vocabulary JS
 
 ## 生成与检查
 
-1. 按用户提供的词汇范围生成内容，检查单词拼写唯一性及转换后的音频文件名冲突；保留已有例句 `eid`，需要新例句 ID 时才分配并检查唯一性。
+1. 按用户提供的词汇范围生成内容，检查单词拼写唯一性并识别重复 stem；按照每个单词的实际例句顺序分配或更新两位 eid，检查局部序号；重复 stem 按首词优先处理，保留后续词条正文。
 2. 为每个单词输出两个音标字段，为每个词义输出非空 `pos` 和 `chinese_meaning`。
 3. 只生成上面列出的字段。导入器会忽略未知字段的内容，但已知字段存在时必须符合类型和必填规则。
 4. 检查 JSON 能严格解析：双引号、无注释、无尾随逗号、无重复键、无无效 Unicode；字段名大小写严格按表使用。
 5. 用户要求 JSON 数据文件时输出纯 JSON，不把说明文字或 Markdown 围栏写入文件。没有实际执行导入时，不声称已通过程序验收。
 
-常见错误：把词性写在单词层面；只提供一种音标；以旧 `phonetic` 代替两个新字段；把数组写成字符串；把 `eid` 写成数字丢失前导零；把学习状态、音频路径或其他自定义字段混入生成的单词对象。
+常见错误：把词性写在单词层面；只提供一种音标；以旧 `phonetic` 代替两个新字段；把数组写成字符串；把 `eid` 写成数字或沿用旧六位 ID；把学习状态、音频路径或其他自定义字段混入生成的单词对象。

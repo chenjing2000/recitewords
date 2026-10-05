@@ -1,66 +1,43 @@
 using ReciteWords.Common;
-using System.Text.Json;
+using ReciteWords.Models;
 namespace ReciteWords.Audio;
 
 public class AudioCatalog : IAudioCatalog
 {
     private string audioFolder = "";
-    private readonly Dictionary<string, Dictionary<string, string>> examples = new Dictionary<string, Dictionary<string, string>>(StringComparer.Ordinal);
-    public AudioLoadResult Load(string wordListPath)
+    private string exampleFolder = "";
+    private readonly HashSet<string> audioWords = new HashSet<string>(StringComparer.Ordinal);
+    public void Load(string wordListPath, WordList words)
     {
-        examples.Clear();
-        var result = new AudioLoadResult();
+        audioWords.Clear();
         string folder = Path.Combine(Path.GetDirectoryName(wordListPath)!, Path.GetFileNameWithoutExtension(wordListPath));
         audioFolder = Path.Combine(folder, "audio");
-        string path = Path.Combine(folder, "examples.json");
-        if (!File.Exists(path)) return result;
-        try
+        exampleFolder = Path.Combine(folder, "examples");
+        var stems = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
+        foreach (var word in words.Words)
         {
-            using var document = JsonDocument.Parse(File.ReadAllText(path));
-            var root = document.RootElement; JsonFields.Object(root);
-            if (!root.TryGetProperty("schema_version", out var version) || version.ValueKind != JsonValueKind.Number || !version.TryGetInt32(out int number) || number != 1)
-                throw new InvalidDataException("例句音频配置版本必须为 1");
-            if (!root.TryGetProperty("words", out var entries)) throw new InvalidDataException("例句音频配置缺少 words");
-            JsonFields.Object(entries);
-            foreach (var item in entries.EnumerateObject())
-            {
-                if (item.Value.ValueKind != JsonValueKind.Array) throw new InvalidDataException("例句集合必须是数组: " + item.Name);
-                foreach (var entry in item.Value.EnumerateArray())
-                {
-                    JsonFields.Object(entry);
-                    string eid = JsonFields.Text(entry, "eid", true);
-                    if (eid.Length != 6 || !JsonFields.Digits(eid) || examples.ContainsKey(eid)) throw new InvalidDataException("例句 eid 必须是唯一的六位数字字符串");
-                    var accents = new Dictionary<string, string>();
-                    foreach (string accent in new[] { "uk", "us" })
-                    {
-                        string relative = JsonFields.Text(entry, accent);
-                        if (relative.Length == 0) continue;
-                        string file = Path.GetFullPath(Path.Combine(folder, relative));
-                        if (File.Exists(file)) accents[accent] = file;
-                    }
-                    examples.Add(eid, accents);
-                }
-            }
+            // 首词按单词本顺序占用 stem，与文件是否存在或写入成功无关。
+            if (stems.Add(AudioFileName.Stem(word.Text))) audioWords.Add(Spelling.Fold(word.Text));
         }
-        catch (Exception ex) when (ex is IOException || ex is InvalidDataException || ex is JsonException || ex is UnauthorizedAccessException || ex is ArgumentException)
-        { examples.Clear(); result.Errors.Add("examples.json: " + ex.Message); }
-        return result;
     }
     public string? FindWord(string word, string accent)
     {
-        if (audioFolder.Length == 0 || (accent != "uk" && accent != "us")) return null;
-        string text = AudioFileName.Stem(word);
-        if (text.Length == 0) return null;
+        if (!audioWords.Contains(Spelling.Fold(word))) return null;
+        return FindFile(audioFolder, AudioFileName.Stem(word), accent);
+    }
+    public string? FindExample(string word, string eid, string accent)
+    {
+        if (!audioWords.Contains(Spelling.Fold(word)) || eid.Length != 2 || !JsonFields.Digits(eid) || eid == "00") return null;
+        return FindFile(exampleFolder, AudioFileName.Stem(word) + "_e" + eid, accent);
+    }
+    private static string? FindFile(string folder, string stem, string accent)
+    {
+        if (folder.Length == 0 || stem.Length == 0 || (accent != "uk" && accent != "us")) return null;
         foreach (string extension in new[] { ".mp3", ".wav" })
         {
-            string path = Path.Combine(audioFolder, text + "_" + accent + extension);
+            string path = Path.Combine(folder, stem + "_" + accent + extension);
             if (File.Exists(path)) return path;
         }
-        return null;
-    }
-    public string? FindExample(string eid, string accent)
-    {
-        if (examples.TryGetValue(eid, out var accents) && accents.TryGetValue(accent, out var path) && File.Exists(path)) return path;
         return null;
     }
 }

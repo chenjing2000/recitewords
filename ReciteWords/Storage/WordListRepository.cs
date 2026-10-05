@@ -35,8 +35,6 @@ public class WordListRepository : IWordListRepository
             list.SchemaVersion = number;
         }
         var spellings = new HashSet<string>(StringComparer.Ordinal);
-        var audioNames = new Dictionary<string, string>(StringComparer.OrdinalIgnoreCase);
-        var eids = new HashSet<string>(StringComparer.Ordinal);
         foreach (var item in JsonFields.Array(root, "words", true))
         {
             JsonFields.Object(item);
@@ -49,10 +47,7 @@ public class WordListRepository : IWordListRepository
                 Etymology = JsonFields.Text(item, "etymology")
             };
             if (!spellings.Add(Spelling.Fold(word.Text))) throw new InvalidDataException("重复拼写: " + word.Text);
-            string audioName = AudioFileName.Stem(word.Text);
-            if (audioNames.TryGetValue(audioName, out string? otherWord))
-                throw new InvalidDataException("音频文件名冲突: “" + otherWord + "” 与 “" + word.Text + "” 均对应 " + audioName);
-            audioNames.Add(audioName, word.Text);
+            int exampleNumber = 0;
             foreach (var senseItem in JsonFields.Array(item, "senses", true))
             {
                 JsonFields.Object(senseItem);
@@ -69,8 +64,11 @@ public class WordListRepository : IWordListRepository
                     Antonyms = JsonFields.Strings(senseItem, "antonyms"),
                     Collocations = JsonFields.Strings(senseItem, "collocations")
                 };
-                if (sense.Eid.Length != 0 && (sense.Eid.Length != 6 || !JsonFields.Digits(sense.Eid) || !eids.Add(sense.Eid)))
-                    throw new InvalidDataException("eid 必须是唯一的六位数字字符串");
+                if (sense.Example.Length > 0) exampleNumber++;
+                if (exampleNumber > 99) throw new InvalidDataException(word.Text + " 的例句不能超过 99 个");
+                if (senseItem.TryGetProperty("eid", out _) &&
+                    (sense.Example.Length == 0 || sense.Eid.Length != 2 || !JsonFields.Digits(sense.Eid) || sense.Eid != exampleNumber.ToString("D2")))
+                    throw new InvalidDataException(word.Text + " 的 eid 必须按例句顺序从 01 开始，当前应为 " + exampleNumber.ToString("D2"));
                 word.Senses.Add(sense);
             }
             list.Words.Add(word);

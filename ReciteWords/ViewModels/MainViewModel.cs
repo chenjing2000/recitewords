@@ -148,12 +148,11 @@ public class MainViewModel : INotifyPropertyChanged, IDisposable
         { data = new ReviewProgress(); progressWritable = false; progressError = "学习记录无法读取或初始化，请自行检查对应 userdata 文件：" + ex.Message; }
         session.Load(wordList, data);
         loaded = true;
-        var audio = catalog.Load(entry.Path);
+        catalog.Load(entry.Path, wordList);
         Settings.Folder = Path.GetDirectoryName(Path.GetFullPath(entry.Path))!;
         Settings.WordListFile = Path.GetFileName(entry.Path);
         SaveSettings();
         PublishCurrent();
-        if (audio.Errors.Count > 0) Warn(string.Join("\n", audio.Errors));
         if (progressError != null) Warn(progressError);
     }
     private bool CanRate() => loaded && progressWritable && CurrentWord != null;
@@ -193,7 +192,7 @@ public class MainViewModel : INotifyPropertyChanged, IDisposable
     }
     public void RevealDefinition() { if (CurrentWord != null) { DefinitionVisible = true; Notify(); } }
     public string? WordAudio(string accent) => CurrentWord == null ? null : catalog.FindWord(CurrentWord.Text, accent);
-    public string? ExampleAudio(string eid, string accent) => eid.Length == 0 ? null : catalog.FindExample(eid, accent);
+    public string? ExampleAudio(string eid, string accent) => CurrentWord == null || eid.Length == 0 ? null : catalog.FindExample(CurrentWord.Text, eid, accent);
     public void PlayWord(string accent) { PlayPath(WordAudio(accent)); }
     public void PlayExample(string eid, string accent) { PlayPath(ExampleAudio(eid, accent)); }
     private void PlayPath(string? path) { if (path != null) { playbackRequest++; player.Play(path); } }

@@ -12,7 +12,7 @@
           "register": [
             "formal"
           ],
-          "eid": "727950",
+          "eid": "01",
           "example": "Cognizant that the surviving census excluded itinerant laborers, the historian refrained from treating its figures as exhaustive.",
           "example_translation": "这位历史学家意识到现存人口普查遗漏了流动劳工，因此没有把其中的数据视为详尽无遗。",
           "synonyms": [
@@ -30,10 +30,10 @@
           ]
         }
       ],
-      "notes": "常与 of 连用，强调对事实或处境已有清楚认识。",
       "etymology": "词源：由 cognizance 逆构而来，后者经古法语追溯至拉丁语 cognoscere（认识、获知）。词义由“知识、认知”发展为“意识到、了解”。",
       "phonetic_uk": "/ˈkɒɡnɪzənt/",
-      "phonetic_us": "/ˈkɑːɡnɪzənt/"
+      "phonetic_us": "/ˈkɑːɡnɪzənt/",
+      "notes": "常与 of 连用，强调对事实或处境已有清楚认识。"
     },
     {
       "word": "address",
@@ -44,7 +44,7 @@
           "chinese_meaning": "处理；应对",
           "example": "Governments should address educational inequality.",
           "example_translation": "政府应当解决教育不平等问题。",
-          "eid": "001234",
+          "eid": "01",
           "synonyms": [
             "tackle"
           ],
@@ -55,7 +55,8 @@
         {
           "pos": "n.",
           "chinese_meaning": "地址",
-          "example": "Please write your address."
+          "example": "Please write your address.",
+          "eid": "02"
         }
       ],
       "phonetic_uk": "/əˈdres/",

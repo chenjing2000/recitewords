@@ -74,6 +74,12 @@ internal static partial class Program
             Equal("#FF007175", exampleTitle.Foreground.ToString());
             foreach (var title in new[] { "Synonyms", "Antonyms", "Collocations", "Notes", "Etymology" })
                 Equal("#FF007175", definitionRuns.First(run => run.Text == title + ":  ").Foreground.ToString());
+            Equal(true, paragraphs.IndexOf(paragraphs.First(p => p.Inlines.OfType<Run>().Any(r => r.Text == "Etymology:  "))) < paragraphs.IndexOf(paragraphs.First(p => p.Inlines.OfType<Run>().Any(r => r.Text == "Notes:  "))));
+            Equal(5 * window.FontSize, ((Border)window.FindName("DefinitionBorder")).MinHeight);
+            var indent = (Thickness)window.Resources["FilterTextIndent"];
+            var space = new FormattedText(" ", System.Globalization.CultureInfo.CurrentUICulture, FlowDirection.LeftToRight,
+                new Typeface(window.FontFamily, window.FontStyle, window.FontWeight, window.FontStretch), window.FontSize, Brushes.Black, VisualTreeHelper.GetDpi(window).PixelsPerDip);
+            Equal(space.WidthIncludingTrailingWhitespace, indent.Left);
             Equal(window.Foreground.ToString(), definitionRuns.First(run => run.Text.StartsWith("Cognizant that")).Foreground.ToString());
             double originalFilterWidth = filterCombo.ActualWidth;
             double originalMinimumWidth = window.MinWidth;
@@ -128,7 +134,7 @@ internal static partial class Program
                 if (text != wordLabel) Equal(true, Math.Abs(text.FontSize - window.FontSize) < 0.001);
             var definitionAtMinimum = (DefinitionView)window.FindName("Definition");
             var viewport = (ScrollViewer)definitionAtMinimum.FindName("Scroller");
-            Equal(true, viewport.ViewportHeight >= 80);
+            Equal(true, viewport.ViewportHeight >= 5 * window.FontSize - 34 - 1);
             var verticalBar = (System.Windows.Controls.Primitives.ScrollBar)viewport.Template.FindName("PART_VerticalScrollBar", viewport);
             Equal(7.0, verticalBar.ActualWidth);
             foreach (var control in VisualChildren(window).OfType<Control>().Where(control => control is Button || control is ComboBox || control is TextBox))

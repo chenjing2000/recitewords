@@ -13,7 +13,7 @@
 | Storage | `ProgressRepository` | 计算每本词库的进度路径；读取、校验和保存进度 | 不兼容 Python 进度，不安排复习 |
 | Storage | `SettingsRepository`、`JsonFileWriter` | 读取设置；采用临时文件写入后替换目标的方式保存 JSON | 只负责持久化；保存失败交给调用者处理 |
 | Review | `ReviewSession`、`ReviewSnapshot` | 按状态筛选、建立内存固定队列、前后导航、评价、分类计数、会话快照与回滚 | 不知道文件路径，不显示 UI，不操作音频 |
-| Audio | `AudioCatalog` | 直接按 word 文件名查找单词音频；加载例句索引，按 eid 查找 UK/US 本地文件 | 不读取词库正文、不修改学习进度、不下载音频 |
+| Audio | `AudioCatalog` | 按 words 顺序预留首次 stem 资格，直接查找单词与局部 eid 例句文件 | 不读取词库正文、不修改学习进度、不下载音频 |
 | Audio | `WpfAudioPlayer` | 使用 WPF MediaPlayer 播放；新播放停止旧播放，结束释放，报告失败 | 不选择当前词，不决定自动播放时机 |
 | ViewModels | `MainViewModel`、`SimpleCommand`、`FilterChoice` | 编排打开、筛选、评价、保存与回滚；提供绑定和命令；更新数量、释义可见性与警告 | 通过服务接口调用，不在其中重写文件格式解析或复习算法 |
 | Views | `MainWindow` | 布局、目录选择、提示计时、窗口事件、尺寸测量 | 不直接读写学习记录 |
@@ -35,12 +35,14 @@ Models 是共同数据协议，Common 是低层共享工具。Storage、Review�
 1. App 组装服务，MainViewModel 读取设置，确定默认目录或上次目录。
 2. WordListRepository 扫描、验证词库，保留名称与路径；选择后重新读取文件，避免缓存过期的整本词库。
 3. ProgressRepository 查找版本 2 userdata 记录并恢复单词状态，缺少时初始化；ReviewSession 从全部分类第一词建立新的内存队列。
-4. AudioCatalog 确定词库同名子目录的 audio/ 路径，并加载 examples.json，不读取 audio.json。
+4. AudioCatalog 接收已经校验的 WordList，确定同名子目录 audio/ 和 examples/，按 words 顺序预留首次 stem；不读取任何音频索引 JSON。
 5. MainViewModel 更新绑定、隐藏释义、停止旧播放，并安排当前词的 UK 自动播放。连续切词时使旧的排队播放请求失效。
 
-Storage 与 Audio 共用 Common.AudioFileName.Stem：去除首尾空白后将每个非 ASCII 字母/数字替换为 `_`，避免两模块的规则漂移。Storage 按不区分大小写的主体检测冲突并拒绝单词本；显示及进度键不变。
+Common.AudioFileName.Stem 去除首尾空白后，将每个非 ASCII 字母/数字替换为 `_`。Storage 不再拒绝 stem 冲突，仅保持原始拼写唯一；AudioCatalog 用不区分大小写的集合按 words 顺序预留 stem，无需判断文件是否存在。后续词禁用单词和例句音频，显示及进度键不变。
 
-单词音频按 `{stem}_uk.mp3/.wav`、`{stem}_us.mp3/.wav` 查找，MP3 优先；例句按六位 eid 精确匹配索引。例句索引损坏报告错误并清空例句映射，但不阻止单词音频查找。音标不作为音频查找键。
+单词音频查 audio/{stem}_uk/us.mp3/.wav；例句查 examples/{stem}_e{eid}_uk/us.mp3/.wav，MP3 优先。eid 只在单词内按实际例句顺序从 01 起唯一，所以 FindExample 接收 word、eid 和口音，不再只接收 eid。
+
+AudioCatalog 不解析 JSON 索引，Load 无需返回配置错误集合；词库数据从 Storage 经 ViewModel 传入，Audio 不依赖具体 Storage 实现。只有文件存在时喇叭才可点击。
 
 ## 导航、评价与保存
 
@@ -58,11 +60,11 @@ Models 的 ReviewProgress 只含可保存数据，Review 的 ReviewSnapshot 含�
 |---|---|---|
 | `<单词本名>.json` | 单词内容与释义 | 用户或生成工具；程序只读 |
 | `<单词本名>/audio/{stem}_uk.mp3/.wav`、`{stem}_us.mp3/.wav` | 单词英美音频文件 | 用户或音频准备工具 |
-| `<单词本名>/examples.json` | 例句的英美音频索引 | 用户或音频准备工具 |
+| `<单词本名>/examples/{stem}_e{eid}_uk.mp3/.wav`、`{stem}_e{eid}_us.mp3/.wav` | 例句英美音频文件 | 用户或音频准备工具 |
 | `userdata/<单词本名>.progress.json` | 单词当前状态（版本 2） | 程序保存 |
 | `recitewords.settings.json` | 上次目录、词库、窗口信息 | 程序保存 |
 
-上表的单词本名指文件名去掉 `.json`，不是 JSON 中的显示名称 `name`。单词本的 `schema_version` 可以是任意正整数；当前音频索引、进度和设置有各自独立的版本校验，不能把单词本规则套用到这些文件。
+上表的单词本名指文件名去掉 `.json`，不是 JSON 中的显示名称 `name`。单词本的 `schema_version` 可以是任意正整数；进度和设置有各自独立的版本校验；音频文件不再依赖 JSON 索引，不能把单词本规则套用到这些文件。
 
 ## 维护与验证
 
@@ -71,3 +73,5 @@ Models 的 ReviewProgress 只含可保存数据，Review 的 ReviewSnapshot 含�
 当前升级已同步双音标模型、读取、绑定、显示、测试夹具，以及必填 pos 校验。删除了旧 WordProgress 次数模型，复习快照仅用于内存回滚，不进入文件。
 
 破坏性升级不迁移旧进度，不读取旧 audio.json；旧单音标词库和版本 1 进度读取失败。没有增加数据库、播放器或通用字段框架。
+
+当前详细音频协议见 [音频文件规范](Audio-Format.md)。释义外框最低 5em，Etymology 在 Notes 前；筛选 ItemTemplate 用一个英文空格的实际宽度设置左边距。

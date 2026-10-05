@@ -37,10 +37,10 @@ artifacts/app/
 WordLists/
   education.json
   education/
-    examples.json
     audio/loyalty_uk.mp3
     audio/loyalty_us.mp3
-    examples/...
+    examples/loyalty_e01_uk.mp3
+    examples/loyalty_e01_us.mp3
   userdata/
     education.progress.json
 ```
@@ -51,9 +51,9 @@ WordLists/
 
 进度只接收版本 2，删除 `review_count`、`position` 和持久化会话，只保存单词当前状态；重新打开从全部分类第一词建立新队列。旧进度读取失败，程序不迁移或覆盖。见 [学习进度格式](docs/Progress-Format.md)。
 
-音频主体 stem 由 word 去除首尾空白后，把每个 `[^0-9a-zA-Z]` 字符替换为 `_` 得到；不合并下划线、不转换大小写。导入时拒绝转换后不区分大小写的文件名冲突。显示和进度键不变。
+音频主体 stem 由 word 去除首尾空白后，把每个 `[^0-9a-zA-Z]` 字符替换为 `_` 得到；不合并下划线、不转换大小写。同一 stem 按单词本顺序仅允许首词使用音频，后续词条仍可学习，但禁用全部单词与例句音频；首词文件不存在也不释放资格。显示和进度键不变。
 
-单词音频直接读取同名子目录 `audio/` 中的 `{stem}_uk.mp3/.wav` 和 `{stem}_us.mp3/.wav`，MP3 优先，不再读取 audio.json。例句仍通过 examples.json 和 eid 关联。
+单词音频直接读取同名子目录 `audio/` 中的 `{stem}_uk.mp3/.wav` 和 `{stem}_us.mp3/.wav`，MP3 优先，不再读取 audio.json。例句直接读取 examples/ 下的 `{stem}_e{eid}_uk/us.mp3/.wav`，不读取 examples.json。eid 是每个单词内从 01 开始的两位序号，不要求跨单词唯一。
 
 ## 构建与测试
 
@@ -84,5 +84,7 @@ dotnet publish ReciteWords -c Release --self-contained false -p:DebugType=None -
 Unicode 拼写匹配采用随程序嵌入的 Unicode 15.1 casefold 数据，保持 Python 格式的大小写比较语义。`tools/generate_case_folding.py` 仅是开发时的数据生成工具；发布程序不依赖 Python。
 
 本轮审查、整改理由和验证范围见 [代码审查报告](docs/Code-Review.md)。
+
+当前音频与界面规则见 [音频文件规范](docs/Audio-Format.md)。
 
 设计目的、模块功能、新格式规范及其他说明见 [文档索引](docs/README.md)。
