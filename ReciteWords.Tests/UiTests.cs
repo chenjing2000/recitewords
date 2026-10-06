@@ -26,7 +26,8 @@ internal static partial class Program
             string folder = Path.Combine(Temp, "sample-qa"); Directory.CreateDirectory(folder);
             File.Copy(Path.Combine(AppContext.BaseDirectory, "Fixtures", "sample.json"), Path.Combine(folder, "sample.json"));
             string settingsPath = Path.Combine(folder, "settings.tmp");
-            var vm = new MainViewModel(new WordListRepository(), new ProgressRepository(), new SettingsRepository(settingsPath), new ReviewSession(), new AudioCatalog(), new TestPlayer(), action => Dispatcher.CurrentDispatcher.BeginInvoke(action, DispatcherPriority.Background));
+            var testPlayer = new TestPlayer();
+            var vm = new MainViewModel(new WordListRepository(), new ProgressRepository(), new SettingsRepository(settingsPath), new ReviewSession(), new AudioCatalog(), testPlayer, action => Dispatcher.CurrentDispatcher.BeginInvoke(action, DispatcherPriority.Background));
             var window = new MainWindow(vm); window.Show(); vm.SelectFolder(folder); vm.RevealDefinition(); Pump(); window.UpdateLayout();
             Equal(true, Math.Abs(window.FontSize - 11.0 * 96 / 72) < 0.001);
             Equal(0, VisualChildren(window).OfType<Slider>().Count());
@@ -215,6 +216,7 @@ internal static partial class Program
                 Equal(true, button.TranslatePoint(new Point(), root).X + button.ActualWidth <= root.ActualWidth + 1);
             window.Left += 1; Pump();
             Capture(window, Path.Combine(output, "long-phonetic.png"));
+            Check("example audio focus and playback preserve scrolled definition", () => VerifyExampleScroll(window, vm, testPlayer));
             vm.SelectFolder(folder); Pump();
             window.Close();
             var restored = new ReviewSession(); restored.Load(new WordListRepository().Load(Path.Combine(folder, "sample.json")), new ProgressRepository().LoadOrCreate(Path.Combine(folder, "sample.json")));
@@ -232,6 +234,38 @@ internal static partial class Program
             }
             VerifyMedia(path);
         });
+    }
+    static void VerifyExampleScroll(MainWindow window, MainViewModel vm, TestPlayer player)
+    {
+        string folder = Path.Combine(Temp, "scrolled-examples"); Directory.CreateDirectory(folder);
+        var senses = Enumerable.Range(1, 8).Select(index => new {
+            pos = "n.", chinese_meaning = "用于验证滚动位置的词义。",
+            eid = index.ToString("D2"), example = "This example sentence has a local audio file.",
+            example_translation = "这条例句用于检查播放时内容区保持在用户选择的位置。"
+        }).ToArray();
+        File.WriteAllText(Path.Combine(folder, "scroll.json"), System.Text.Json.JsonSerializer.Serialize(new {
+            words = new[] { new { word = "scroll", phonetic_uk = "", phonetic_us = "", senses } }
+        }));
+        string audioFolder = Path.Combine(folder, "scroll", "examples"); Directory.CreateDirectory(audioFolder);
+        foreach (string accent in new[] { "uk", "us" }) File.WriteAllBytes(Path.Combine(audioFolder, "scroll_e08_" + accent + ".wav"), Array.Empty<byte>());
+        vm.SelectFolder(folder); vm.RevealDefinition(); Pump();
+        window.Height = window.MinHeight + 100; Pump(); window.UpdateLayout();
+        var definition = (DefinitionView)window.FindName("Definition");
+        var scroller = (ScrollViewer)definition.FindName("Scroller");
+        var editor = (RichTextBox)definition.FindName("ContentEditor");
+        var document = editor.Document;
+        foreach (string accent in new[] { "uk", "us" })
+        {
+            var button = VisualChildren(definition).OfType<Button>().Last(b => Equals(b.ToolTip, accent == "uk" ? "例句英音" : "例句美音"));
+            Equal(true, button.IsEnabled);
+            scroller.ScrollToBottom(); Pump(); double offset = scroller.VerticalOffset; Equal(true, offset > 0);
+            Equal(true, button.Focus()); Pump();
+            button.RaiseEvent(new RoutedEventArgs(Button.ClickEvent)); Pump();
+            Equal(Path.Combine(audioFolder, "scroll_e08_" + accent + ".wav"), player.Played.Last());
+            Equal(true, ReferenceEquals(document, editor.Document));
+            if (Math.Abs(offset - scroller.VerticalOffset) > 1)
+                throw new Exception($"Example {accent} playback moved scroll from {offset} to {scroller.VerticalOffset}");
+        }
     }
     static IEnumerable<DependencyObject> VisualChildren(DependencyObject parent)
     {

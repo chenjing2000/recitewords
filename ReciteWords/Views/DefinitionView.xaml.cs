@@ -15,6 +15,8 @@ public partial class DefinitionView : UserControl
     public DefinitionView()
     {
         InitializeComponent();
+        // 内联喇叭获取焦点会触发自动定位；释义区保持用户的手动滚动位置。
+        ContentEditor.RequestBringIntoView += (_, e) => e.Handled = true;
         ContentEditor.PreviewMouseWheel += (_, e) =>
         {
             e.Handled = true;
