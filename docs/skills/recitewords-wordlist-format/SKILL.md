@@ -16,7 +16,7 @@ description: Use when generating, editing, or checking ReciteWords vocabulary JS
 | 字段 | 类型 | 必填 | 规则 |
 |---|---|---|---|
 | `words` | 对象数组 | 是 | 至少包含一个单词 |
-| `name` | 字符串 | 否 | 单词本显示名称；省略或为空时采用文件名（不含扩展名） |
+| `name` | 字符串 | 否 | 可选名称元数据；不参与顶部下拉框显示，下拉框始终使用不带扩展名的实际文件名 |
 | `description` | 字符串 | 否 | 单词本说明 |
 | `schema_version` | 整数 | 否 | 任意正整数；不限定为 1，也不表示自动启用旧格式兼容 |
 

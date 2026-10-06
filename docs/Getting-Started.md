@@ -4,7 +4,7 @@
 
 使用 Windows 和 .NET 10 Windows Desktop Runtime；本机验证版本为 10.0.11，SDK 为 10.0.400。无第三方 NuGet 包、数据库或 Python 运行依赖。
 
-启动 `artifacts/app/ReciteWords.exe`，点击右上文件夹图标选择单词本目录。只扫描当前目录直属 JSON，不递归；无效文件跳过并提示，其它有效词库正常打开。上次目录、词库、窗口位置及尺寸存入 EXE 同目录的 `recitewords.settings.json`。程序和词库目录须可写。
+启动 `artifacts/app/ReciteWords.exe`，点击右上文件夹图标选择单词本目录。只扫描当前目录直属 JSON，不递归；无效文件跳过并提示，其它有效词库正常打开。顶部下拉框始终显示不带扩展名的实际文件名，JSON 的 `name` 不参与显示。上次目录、词库、窗口位置及尺寸存入 EXE 同目录的 `recitewords.settings.json`。程序和词库目录须可写。
 
 ## 进度与复习
 

@@ -31,6 +31,7 @@ internal static partial class Program
             Equal(true, Math.Abs(window.FontSize - 11.0 * 96 / 72) < 0.001);
             Equal(0, VisualChildren(window).OfType<Slider>().Count());
             var bookCombo = (ComboBox)window.FindName("WordListCombo");
+            Equal("sample", bookCombo.Text);
             var filterCombo = (ComboBox)window.FindName("ReviewFilterCombo");
             Equal("全部(6)", vm.Filters[0].Label); Equal("未学(6)", vm.Filters[1].Label);
             Equal("全部(6)", ((FilterChoice)filterCombo.SelectedItem).Label);

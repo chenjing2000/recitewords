@@ -29,7 +29,7 @@ artifacts/app/
 
 每本词库采用含 `words` 数组的 JSON 对象。每词必选 `word`、`phonetic_uk`、`phonetic_us` 和非空 `senses`，每个义项必选非空 `pos`、`chinese_meaning`。两个音标字段允许空字符串。其他已知字段可省略，未知字段允许存在但不导入；不接受注释、尾随逗号和重复键。
 
-义项支持词性、中英文释义、语域标签、例句及译文、同义词、反义词、搭配；单词支持 Notes、Etymology。`schema_version` 可省略，提供时为任意正整数。没有 `name` 时按词库文件名显示。
+义项支持词性、中英文释义、语域标签、例句及译文、同义词、反义词、搭配；单词支持 Notes、Etymology。`schema_version` 可省略，提供时为任意正整数。顶部下拉框始终显示不带扩展名的实际文件名，`name` 字段不参与显示。
 
 本次为破坏性升级：删除 `wid`，用标准化后的 `word` 关联进度，不兼容旧 `phonetic`；未知字段仍忽略，不能代替必填字段。完整规则见 [单词本格式 skill](docs/skills/recitewords-wordlist-format/SKILL.md)。
 

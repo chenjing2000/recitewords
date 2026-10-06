@@ -33,7 +33,7 @@ Models 是共同数据协议，Common 是低层共享工具。Storage、Review�
 ## 打开单词本
 
 1. App 组装服务，MainViewModel 读取设置，确定默认目录或上次目录；选择没有有效词库的目录也会记住该目录。
-2. WordListRepository 扫描、验证词库，保留名称与路径；选择后重新读取文件，避免缓存过期的整本词库。
+2. WordListRepository 扫描、验证词库，列表条目只保留不带扩展名的实际文件名与路径，JSON 的 name 不参与列表显示；选择后重新读取文件，避免缓存过期的整本词库。
 3. ProgressRepository 查找版本 2 userdata 记录并恢复单词状态，缺少时初始化；ReviewSession 从全部分类第一词建立新的内存队列。
 4. AudioCatalog 接收已经校验的 WordList，确定同名子目录 audio/ 和 examples/，按 words 顺序预留首次 stem；不读取任何音频索引 JSON。
 5. MainViewModel 更新绑定、隐藏释义、停止旧播放，并安排当前词的 UK 自动播放。连续切词时使旧的排队播放请求失效。
@@ -64,7 +64,7 @@ Models 的 ReviewProgress 只含可保存数据，Review 的 ReviewSnapshot 含�
 | `userdata/<单词本名>.progress.json` | 单词当前状态（版本 2） | 程序保存 |
 | `recitewords.settings.json` | 上次目录、词库、窗口信息 | 程序保存 |
 
-上表的单词本名指文件名去掉 `.json`，不是 JSON 中的显示名称 `name`。单词本的 `schema_version` 可以是任意正整数；进度和设置有各自独立的版本校验；音频文件不再依赖 JSON 索引，不能把单词本规则套用到这些文件。
+上表的单词本名指文件名去掉 `.json`，也是顶部下拉框显示的名称；JSON 的 `name` 只作为可选元数据，不参与下拉框显示。单词本的 `schema_version` 可以是任意正整数；进度和设置有各自独立的版本校验；音频文件不再依赖 JSON 索引，不能把单词本规则套用到这些文件。
 
 ## 维护与验证
 

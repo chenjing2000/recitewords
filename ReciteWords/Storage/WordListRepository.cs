@@ -14,7 +14,11 @@ public class WordListRepository : IWordListRepository
         Array.Sort(paths, StringComparer.OrdinalIgnoreCase);
         foreach (string path in paths)
         {
-            try { result.Entries.Add(new WordListEntry { Path = path, Name = Load(path).Name }); }
+            try
+            {
+                Load(path);
+                result.Entries.Add(new WordListEntry { Path = path, Name = Path.GetFileNameWithoutExtension(path) });
+            }
             catch (Exception ex) when (ex is IOException || ex is InvalidDataException || ex is UnauthorizedAccessException || ex is JsonException)
             { result.Errors.Add(Path.GetFileName(path) + ": " + ex.Message); }
         }

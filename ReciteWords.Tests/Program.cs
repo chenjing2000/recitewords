@@ -84,6 +84,17 @@ internal static partial class Program
             Directory.CreateDirectory(Path.Combine(folder, "userdata")); File.WriteAllText(Path.Combine(folder, "userdata", "x.json"), Minimal);
             var result = repo.Scan(folder); Equal(1, result.Entries.Count); Equal(2, result.Errors.Count); Equal("ok", result.Entries[0].Name);
         });
+        Check("scan displays filename stems regardless of name metadata", () => {
+            string folder = Path.Combine(Temp, "filename-labels"); Directory.CreateDirectory(folder);
+            File.WriteAllText(Path.Combine(folder, "01.first.json"), Minimal.Replace("{\"words\":", "{\"name\":\"Shared title\",\"words\":"));
+            File.WriteAllText(Path.Combine(folder, "02.second.json"), Minimal.Replace("{\"words\":", "{\"name\":\"Shared title\",\"words\":"));
+            File.WriteAllText(Path.Combine(folder, "03.third.json"), Minimal.Replace("{\"words\":", "{\"name\":\"\",\"words\":"));
+            var result = repo.Scan(folder);
+            Equal(3, result.Entries.Count); Equal(0, result.Errors.Count);
+            Equal("01.first", result.Entries[0].Name); Equal("02.second", result.Entries[1].Name); Equal("03.third", result.Entries[2].Name);
+            Equal(Path.Combine(folder, "01.first.json"), result.Entries[0].Path);
+            Equal("Shared title", repo.Load(result.Entries[0].Path).Name);
+        });
         foreach (var pair in new[] { ("ﬅ", "st"), ("ſ", "s"), ("µ", "μ"), ("ŉ", "ʼn"), ("İ", "i̇"), ("Straße", "strasse") })
             Check("Unicode folding " + pair.Item1, () => Equal(pair.Item2, Spelling.Fold(pair.Item1)));
     }
