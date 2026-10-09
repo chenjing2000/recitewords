@@ -33,6 +33,7 @@ internal static partial class Program
             Equal(0, VisualChildren(window).OfType<Slider>().Count());
             var bookCombo = (ComboBox)window.FindName("WordListCombo");
             Equal("sample", bookCombo.Text);
+            Equal(true, VisualChildren(bookCombo).OfType<TextBlock>().Any(text => text.Text == "sample"));
             var filterCombo = (ComboBox)window.FindName("ReviewFilterCombo");
             Equal("全部(6)", vm.Filters[0].Label); Equal("未学(6)", vm.Filters[1].Label);
             Equal("全部(6)", ((FilterChoice)filterCombo.SelectedItem).Label);
@@ -204,6 +205,8 @@ internal static partial class Program
             Equal(true, Math.Abs(definitionBorder.ActualHeight - restingDefinitionHeight) < 1);
             Equal(true, Math.Abs(unknown.TranslatePoint(new Point(), window).Y - restingButtonsY) < 1);
             Capture(window, Path.Combine(output, "information-collapsed.png"));
+            Check("focus uses pale teal without dotted visuals or layout shifts", () => VerifyFocusStyles(window));
+            Check("global arrows and space only navigate or toggle definitions", () => VerifyGlobalKeys(window, vm, testPlayer));
             string longFolder = Path.Combine(Temp, "long-phonetics"); Directory.CreateDirectory(longFolder);
             string longPath = Path.Combine(longFolder, "long-phonetic.json");
             string longPhonetic = "/" + new string('a', 300) + "/";
@@ -260,11 +263,102 @@ internal static partial class Program
             Equal(true, button.IsEnabled);
             scroller.ScrollToBottom(); Pump(); double offset = scroller.VerticalOffset; Equal(true, offset > 0);
             Equal(true, button.Focus()); Pump();
+            Equal<Style?>(null, button.FocusVisualStyle);
+            Equal(true, VisualChildren(button).OfType<Border>().Any(border => border.Background?.ToString() == "#FFE8F4F1"));
             button.RaiseEvent(new RoutedEventArgs(Button.ClickEvent)); Pump();
             Equal(Path.Combine(audioFolder, "scroll_e08_" + accent + ".wav"), player.Played.Last());
             Equal(true, ReferenceEquals(document, editor.Document));
             if (Math.Abs(offset - scroller.VerticalOffset) > 1)
                 throw new Exception($"Example {accent} playback moved scroll from {offset} to {scroller.VerticalOffset}");
+        }
+    }
+    static void VerifyFocusStyles(MainWindow window)
+    {
+        foreach (var button in VisualChildren(window).OfType<Button>().Where(b => b.IsEnabled && !(b.ToolTip is string tip && (tip == "单词英音" || tip == "单词美音" || tip == "例句英音" || tip == "例句美音"))).ToList())
+        {
+            double width = button.ActualWidth; double height = button.ActualHeight;
+            Equal(true, button.Focus()); Pump();
+            Equal<Style?>(null, button.FocusVisualStyle);
+            var border = (Border)button.Template.FindName("Surface", button);
+            Equal("#FFE8F4F1", border.Background.ToString()); Equal(new Thickness(1), border.BorderThickness);
+            Equal(width, button.ActualWidth); Equal(height, button.ActualHeight);
+        }
+        foreach (string name in new[] { "WordListCombo", "ReviewFilterCombo" })
+        {
+            var combo = (ComboBox)window.FindName(name);
+            Equal(true, combo.Focus()); Pump(); Equal<Style?>(null, combo.FocusVisualStyle);
+            Equal(true, VisualChildren(combo).OfType<Border>().Any(border => border.Background?.ToString() == "#FFE8F4F1"));
+            combo.IsDropDownOpen = true; Pump();
+            var item = (ComboBoxItem)combo.ItemContainerGenerator.ContainerFromIndex(0);
+            Equal(true, item.Focus()); Pump(); Equal<Style?>(null, item.FocusVisualStyle);
+            Equal(true, VisualChildren(item).OfType<Border>().Any(border => border.Background?.ToString() == "#FFE8F4F1"));
+            string popupOutput = Path.GetFullPath(Path.Combine(AppContext.BaseDirectory, "../../../../artifacts/qa"));
+            Capture(window, Path.Combine(popupOutput, "focus-" + name + ".png"));
+            combo.RaiseEvent(new System.Windows.Input.KeyEventArgs(System.Windows.Input.Keyboard.PrimaryDevice, PresentationSource.FromVisual(window), Environment.TickCount, System.Windows.Input.Key.Escape) { RoutedEvent = System.Windows.Input.Keyboard.KeyDownEvent }); Pump();
+            Equal(false, combo.IsDropDownOpen);
+        }
+        var filter = (ComboBox)window.FindName("ReviewFilterCombo"); filter.Focus(); Pump();
+        int selectedIndex = filter.SelectedIndex;
+        filter.RaiseEvent(new System.Windows.Input.KeyEventArgs(System.Windows.Input.Keyboard.PrimaryDevice, PresentationSource.FromVisual(window), Environment.TickCount, System.Windows.Input.Key.Down) { RoutedEvent = System.Windows.Input.Keyboard.KeyDownEvent }); Pump();
+        Equal(selectedIndex + 1, filter.SelectedIndex); filter.SelectedIndex = selectedIndex; Pump();
+        var vm = (MainViewModel)window.DataContext;
+        if (!vm.DefinitionVisible) { vm.RevealDefinition(); Pump(); }
+        var scroller = (ScrollViewer)((DefinitionView)window.FindName("Definition")).FindName("Scroller");
+        if (scroller.Focusable)
+        {
+            Equal(true, scroller.Focus()); Pump(); Equal<Style?>(null, scroller.FocusVisualStyle);
+            Equal("#00FFFFFF", scroller.Background.ToString());
+            Equal("#FFFFFFFF", ((Border)window.FindName("DefinitionBorder")).Background.ToString());
+        }
+        var unknown = (Button)window.FindName("UnknownButton"); unknown.Focus(); Pump();
+        foreach (string name in new[] { "WordListCombo", "ReviewFilterCombo" })
+            Equal(false, VisualChildren((ComboBox)window.FindName(name)).OfType<Border>().Any(border => border.Background?.ToString() == "#FFE8F4F1"));
+        Equal(true, unknown.MoveFocus(new System.Windows.Input.TraversalRequest(System.Windows.Input.FocusNavigationDirection.Next))); Pump();
+        Equal("认识", ((Button)System.Windows.Input.Keyboard.FocusedElement).Content);
+        Equal(false, VisualChildren(unknown).OfType<Border>().Any(border => border.Background?.ToString() == "#FFE8F4F1"));
+        string output = Path.GetFullPath(Path.Combine(AppContext.BaseDirectory, "../../../../artifacts/qa"));
+        Capture(window, Path.Combine(output, "focus-button.png"));
+    }
+    static void VerifyGlobalKeys(MainWindow window, MainViewModel vm, TestPlayer player)
+    {
+        string audioFolder = Path.Combine(Path.GetDirectoryName(vm.SelectedWordList!.Path)!, "sample", "audio");
+        Directory.CreateDirectory(audioFolder); File.WriteAllBytes(Path.Combine(audioFolder, "cognizant_uk.wav"), Array.Empty<byte>());
+        vm.OpenWordList(vm.SelectedWordList!); Pump();
+        string progressPath = ProgressRepository.ProgressPath(vm.SelectedWordList!.Path);
+        string progressBefore = File.ReadAllText(progressPath);
+        var unknown = (Button)window.FindName("UnknownButton"); unknown.Focus(); Pump();
+        string first = vm.CurrentWord!.Text;
+        GlobalKey(window, unknown, System.Windows.Input.Key.Left); Equal(first, vm.CurrentWord!.Text);
+        GlobalKey(window, unknown, System.Windows.Input.Key.Space); Equal(true, vm.DefinitionVisible); Equal(first, vm.CurrentWord!.Text);
+        GlobalKey(window, unknown, System.Windows.Input.Key.Space); Equal(false, vm.DefinitionVisible);
+        GlobalKey(window, unknown, System.Windows.Input.Key.Right); Equal("address", vm.CurrentWord!.Text);
+        GlobalKey(window, unknown, System.Windows.Input.Key.Left); Equal(first, vm.CurrentWord!.Text);
+        var filter = (ComboBox)window.FindName("ReviewFilterCombo"); filter.Focus(); Pump();
+        int selected = filter.SelectedIndex;
+        GlobalKey(window, filter, System.Windows.Input.Key.Right); Equal("address", vm.CurrentWord!.Text); Equal(selected, filter.SelectedIndex);
+        filter.IsDropDownOpen = true; Pump();
+        var item = (ComboBoxItem)filter.ItemContainerGenerator.ContainerFromIndex(selected); item.Focus(); Pump();
+        GlobalKey(window, item, System.Windows.Input.Key.Left); Equal(first, vm.CurrentWord!.Text);
+        GlobalKey(window, item, System.Windows.Input.Key.Space); Equal(true, vm.DefinitionVisible);
+        Equal(selected, filter.SelectedIndex); Equal(true, filter.IsDropDownOpen);
+        filter.IsDropDownOpen = false; Pump();
+        var speaker = (Button)window.FindName("WordUkButton");
+        Equal(true, speaker.Focus()); Pump();
+        int plays = player.Played.Count;
+        GlobalKey(window, speaker, System.Windows.Input.Key.Space); Equal(false, vm.DefinitionVisible); Equal(plays, player.Played.Count);
+        Equal(progressBefore, File.ReadAllText(progressPath));
+        vm.OpenWordList(vm.SelectedWordList!); Pump();
+    }
+    static void GlobalKey(MainWindow window, UIElement target, System.Windows.Input.Key key)
+    {
+        foreach (var events in new[] {
+            (System.Windows.Input.Keyboard.PreviewKeyDownEvent, System.Windows.Input.Keyboard.KeyDownEvent),
+            (System.Windows.Input.Keyboard.PreviewKeyUpEvent, System.Windows.Input.Keyboard.KeyUpEvent)
+        })
+        {
+            var args = new System.Windows.Input.KeyEventArgs(System.Windows.Input.Keyboard.PrimaryDevice, PresentationSource.FromVisual(window), Environment.TickCount, key) { RoutedEvent = events.Item1 };
+            target.RaiseEvent(args); Equal(true, args.Handled);
+            args.RoutedEvent = events.Item2; target.RaiseEvent(args); Pump();
         }
     }
     static IEnumerable<DependencyObject> VisualChildren(DependencyObject parent)

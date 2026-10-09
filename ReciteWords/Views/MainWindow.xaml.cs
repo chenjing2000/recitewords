@@ -1,5 +1,6 @@
 using System.ComponentModel;
 using System.Windows;
+using System.Windows.Input;
 using System.Windows.Media;
 using System.Globalization;
 using System.Windows.Threading;
@@ -24,7 +25,32 @@ public partial class MainWindow : Window
         Loaded += (_, _) => { UpdateFilterWidth(); UpdateMinimumSize(); };
         LayoutRoot.LayoutUpdated += (_, _) => UpdateMinimumSize();
         Closing += OnClosing;
+        PreviewKeyDown += OnGlobalKeyDown;
+        PreviewKeyUp += OnGlobalKeyUp;
         Closed += (_, _) => { warningTimer.Stop(); vm.PropertyChanged -= OnViewModelChanged; vm.FolderRequested -= ChooseFolder; vm.WarningChanged -= OnWarningChanged; vm.Dispose(); };
+    }
+    private void OnGlobalKeyDown(object sender, KeyEventArgs e)
+    {
+        if (e.Key == Key.Left)
+        {
+            e.Handled = true;
+            vm.PreviousCommand.Execute(null);
+        }
+        else if (e.Key == Key.Right)
+        {
+            e.Handled = true;
+            vm.NextCommand.Execute(null);
+        }
+        else if (e.Key == Key.Space)
+        {
+            e.Handled = true;
+            if (!e.IsRepeat) vm.RevealCommand.Execute(null);
+        }
+    }
+    private void OnGlobalKeyUp(object sender, KeyEventArgs e)
+    {
+        // 释放事件也要拦截，避免空格触发焦点按钮的默认操作。
+        if (e.Key == Key.Left || e.Key == Key.Right || e.Key == Key.Space) e.Handled = true;
     }
     private void UpdateFilterWidth()
     {
