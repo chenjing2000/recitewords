@@ -8,7 +8,12 @@ public class SettingsRepository : ISettingsRepository
     public SettingsRepository(string path) { this.path = path; }
     public AppSettings Load()
     {
-        if (!File.Exists(path)) return new AppSettings();
+        if (!File.Exists(path))
+        {
+            var defaults = new AppSettings();
+            Save(defaults);
+            return defaults;
+        }
         var settings = JsonSerializer.Deserialize<AppSettings>(File.ReadAllText(path), JsonFileWriter.Options) ?? throw new InvalidDataException("设置文件为空");
         if (settings.SchemaVersion != 1 || settings.Folder == null || settings.WordListFile == null)
             throw new InvalidDataException("设置版本或结构无效");

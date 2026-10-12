@@ -1,8 +1,8 @@
-> 本文记录格式升级前的审查与交付。当前协议以格式 skill、Progress-Format.md 和 Getting-Started.md 为准；升级结果见 Format-Upgrade.md。
+> 本文主要记录早期审查与交付，当前审查结果见 Code-Review.md。当前协议以格式 skill、Progress-Format.md 和 Getting-Started.md 为准；升级结果见 Format-Upgrade.md。
 
 # 实施结果
 
-当前交付：`artifacts/app/ReciteWords.exe`，采用 .NET 10 / WPF / 简单 MVVM；本机 Windows Desktop Runtime 10.0.11，SDK 10.0.400。无第三方 NuGet 包或数据库，运行时不依赖 Python。
+当前交付：`dist/ReciteWords.exe`（单文件，不含 .NET 运行时），采用 .NET 10 / WPF / 简单 MVVM；本机 Windows Desktop Runtime 10.0.11，SDK 10.0.400。无第三方 NuGet 包或数据库，运行时不依赖 Python。
 
 当前使用方式和数据保存见 [运行与交付](Getting-Started.md)。完整模块审查、已修正问题、简化理由及清理范围见 [代码审查与整改](Code-Review.md)。原始实施方案保留为历史依据，不覆盖之后已确认的界面调整。
 

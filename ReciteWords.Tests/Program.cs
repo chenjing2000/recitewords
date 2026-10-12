@@ -10,7 +10,7 @@ internal static partial class Program
     [STAThread]
     static int Main(string[] args)
     {
-        Temp = Path.GetFullPath(Path.Combine(AppContext.BaseDirectory, "../../../../artifacts/tests/", Guid.NewGuid().ToString("N")));
+        Temp = Path.Combine(Path.GetTempPath(), "ReciteWords.Tests-" + Guid.NewGuid().ToString("N"));
         Directory.CreateDirectory(Temp);
         try
         {

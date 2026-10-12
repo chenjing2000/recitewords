@@ -1,4 +1,4 @@
-> 此文档保留原始方案，其中旧 wid、单音标、进度与 audio.json 规则已作废。当前规则以 docs/skills/recitewords-wordlist-format/SKILL.md、docs/Progress-Format.md 和 docs/Getting-Started.md 为准。
+> 此文档保留原始业务方案，其中旧 wid、单音标、进度与 audio.json 规则已作废；发布命令和测试输出位置已按 2026-10-13 的决定更新。当前规则以 docs/skills/recitewords-wordlist-format/SKILL.md、docs/Progress-Format.md 和 docs/Getting-Started.md 为准。
 
 # ReciteWords 实现方案
 
@@ -49,7 +49,7 @@
 - 最新已安装 SDK：`10.0.400`。
 - 最新已安装 `Microsoft.NETCore.App` 和 `Microsoft.WindowsDesktop.App`：`10.0.11`。
 - `C:\Projects\englishbench\EnglishBench\EnglishBench.csproj` 使用 `net10.0-windows` 和 `RuntimeFrameworkVersion=10.0.11`。
-- englishbench 的 `docs/Getting-Started.md` 规定框架依赖发布，四个运行文件放在 `artifacts/app/`；先发布至 `artifacts/app-update/`，验证后更新运行文件并保留设置。
+- 早期参考 EnglishBench 的目录发布方式，现已改为框架依赖的单文件 EXE，直接发布到 dist；更新时保留设置和用户数据。
 
 ReciteWords 使用同样的发布方式，不做安装包、不做自包含发布、不合成单个 EXE。`global.json` 选择 SDK `10.0.400`，`rollForward=latestPatch`。运行时允许兼容的后续 .NET 10 补丁，构建时不启用预览语言功能。
 
@@ -244,7 +244,7 @@ C:\WordLists\
 
 ### 程序设置
 
-`recitewords.settings.json` 位于 EXE 同目录，与 englishbench 的设置存放及更新方式一致：保存格式版本、上次词库文件夹、上次词库文件名、窗口位置和尺寸。字号固定为 11pt，不保存或恢复字号。文件夹使用绝对路径，词库使用相对于该文件夹的文件名。
+`<主程序名>.settings.json` 位于 EXE 同目录，与 englishbench 的设置存放及更新方式一致：保存格式版本、上次词库文件夹、上次词库文件名、窗口位置和尺寸。字号固定为 11pt，不保存或恢复字号。文件夹使用绝对路径，词库使用相对于该文件夹的文件名。
 
 切换文件夹或词库成功后立即保存选择；窗口尺寸、位置在正常退出时保存。设置缺失或损坏时使用默认值并提示，设置写入失败只报告错误，不阻止学习。学习记录保存失败则阻止该次导航或评价提交。
 
@@ -362,7 +362,7 @@ ViewModel 通过普通属性、INotifyPropertyChanged 和非泛型 SimpleCommand
 - [ ] 实现屏幕与 DPI 查询、移动/工作区变化处理及最大化约束；检查固定最小尺寸不会突破最大值。
 - [ ] 人工验收：100%/150%缩放、多屏切换（有设备时）、任务栏不同位置、最大化/系统菜单、旧尺寸恢复；缺少设备的场景明确标为未验证。
 - [ ] 在完成窗口约束后再次使用上述小样本确认半屏尺寸下的长内容及手动滚动，确认小样本验收通过后再进行完整词库和发布验证。
-- [ ] 完成 `.gitignore` 检查：忽略 bin/obj、artifacts、IDE文件、设置、真实 wordlist、个人 userdata 目录和临时文件；固定 Fixtures 明确保留，不全局忽略 JSON/MP3，文件写入测试在临时目录创建 userdata。
+- [ ] 完成 `.gitignore` 检查：忽略 bin/obj、dist、IDE文件、设置、真实 wordlist、个人 userdata 目录和临时文件；固定 Fixtures 明确保留，不全局忽略 JSON/MP3，文件写入测试在临时目录创建 userdata。
 - [ ] 执行完整构建和测试，通过后暂存发布并检查真实启动；只在用户审阅方案并进入实施后执行。
 - [ ] 保存源代码、测试、运行说明及正式发布目录；核对更新不替换设置或词库。
 
@@ -383,19 +383,14 @@ ViewModel 通过普通属性、INotifyPropertyChanged 和非泛型 SimpleCommand
 ```powershell
 dotnet build ReciteWords -c Release
 dotnet run --project ReciteWords.Tests -c Release
-dotnet publish ReciteWords -c Release --self-contained false -p:DebugType=None -p:DebugSymbols=false -o artifacts/app-update
+dotnet publish ReciteWords -c Release -r win-x64 --self-contained false -p:PublishSingleFile=true -p:DebugType=None -p:DebugSymbols=false -o dist
 ```
 
 测试项目使用普通断言和非零失败退出码，不引入额外测试框架。文件测试只写测试临时目录，不写原 Python 词库。原目录可以作为只读兼容输入；真实复习和写入验收使用复制的词库。
 
-正式运行目录 `artifacts/app/` 保持以下四个文件在一起：
+正式运行目录为 `dist/`，程序文件只有 `ReciteWords.exe`，不包含 .NET 运行时。
 
-- `ReciteWords.exe`
-- `ReciteWords.dll`
-- `ReciteWords.deps.json`
-- `ReciteWords.runtimeconfig.json`
-
-可选 `recitewords.settings.json` 由程序建立，更新时保留；用户词库和音频独立放置，不捆绑个人内容。发布更新前关闭程序，暂存发布验证成功后只更新四个运行文件。
+配置 `<主程序名>.settings.json` 在 EXE 同目录首次运行时建立，更新时保留；用户词库和音频独立放置，不捆绑个人内容。发布更新前关闭程序，只更新 EXE。测试数据放在 Windows 临时目录，结束后删除；不生成截图或报告文件。
 
 完成必须有：构建成功、业务及文件测试通过、实际启动和本地音频播放验证、真实词库内容兼容检查、半屏窗口与长释义人工验收、发布后启动验证。无法验证的多屏或特定音频格式单列说明，不以编译成功代替界面或声音验收。
 

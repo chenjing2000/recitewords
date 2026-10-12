@@ -11,15 +11,15 @@
 | Common | `JsonFields`、`Spelling`、`AudioFileName` | 校验 JSON 对象、字段类型、重复键、Unicode；提供共享拼写 casefold 比较与 AudioFileName 音频主体转换 | 不依赖 Storage 或 Audio，不处理窗口或业务状态 |
 | Storage | `WordListRepository` | 扫描当前目录直属 JSON；校验并加载词库；返回目录条目与错误 | 只读词库；不修改原词库，不决定评价和播放 |
 | Storage | `ProgressRepository` | 计算每本词库的进度路径；读取、校验和保存进度 | 不兼容 Python 进度，不安排复习 |
-| Storage | `SettingsRepository`、`JsonFileWriter` | 读取设置；采用临时文件写入后替换目标的方式保存 JSON | 只负责持久化；保存失败交给调用者处理 |
+| Storage | `SettingsRepository`、`JsonFileWriter` | 读取设置、缺少时初始化；采用临时文件写入后替换目标的方式保存 JSON | 只负责持久化；保存失败交给调用者处理 |
 | Review | `ReviewSession`、`ReviewSnapshot` | 按状态筛选、建立内存固定队列、前后导航、评价、分类计数、会话快照与回滚 | 不知道文件路径，不显示 UI，不操作音频 |
 | Audio | `AudioCatalog` | 按 words 顺序预留首次 stem 资格，直接查找单词与局部 eid 例句文件 | 不读取词库正文、不修改学习进度、不下载音频 |
 | Audio | `WpfAudioPlayer` | 使用 WPF MediaPlayer 播放；新播放停止旧播放，结束释放，报告失败 | 不选择当前词，不决定自动播放时机 |
-| ViewModels | `MainViewModel`、`SimpleCommand`、`FilterChoice` | 编排打开、筛选、评价、保存与回滚；提供绑定和命令；更新数量、释义可见性与警告 | 通过服务接口调用，不在其中重写文件格式解析或复习算法 |
+| ViewModels | `MainViewModel`、`SimpleCommand`、`FilterChoice` | 编排打开、筛选、评价、保存与回滚；提供绑定和命令；更新数量、释义可见性与警告 | 通过服务接口调用，不在其中重写文件格式解析或复习算法；启动时保留配置错误提示 |
 | Views | `MainWindow` | 布局、目录选择、提示计时、窗口事件、尺寸测量 | 不直接读写学习记录 |
 | Views | `DefinitionView` | 用 FlowDocument 绘制词义、字段、缩进、例句与内联音频按钮；转发手动滚动 | 不决定学习状态；播放操作交给 ViewModel |
 | Resources / ui | 样式、矢量图标、主图标、casefold 数据 | 保存显示资源与拼写比较数据 | 原始图标和开发生成资源分开，运行时不依赖生成工具 |
-| Platform | `WindowBounds` | 根据显示器、工作区和 DPI 管理窗口尺寸与最大化约束 | 不包含词库或学习逻辑 |
+| Platform | `WindowBounds` | 根据显示器、工作区和 DPI 恢复启动位置与尺寸；不设置最大尺寸限制 | 不包含词库或学习逻辑 |
 | Tests / tools | `ReciteWords.Tests`、开发脚本 | 验证文件、复习、音频、ViewModel 和 WPF 界面；生成图标及 casefold 资源 | 不属于正式程序的运行依赖 |
 
 ## 服务接口
@@ -46,7 +46,7 @@ AudioCatalog 不解析 JSON 索引，Load 无需返回配置错误集合；词�
 
 ## 导航、评价与保存
 
-导航和分类选择只改变内存会话，不写文件。Start 只接收分类，每次从第一词开始；LoadOrCreate 只接收单词本路径，不接收词库内容。评价前 Capture 深复制状态字典和队列到 ReviewSnapshot，再覆盖当前状态并前进；GetProgress 只返回可保存状态，ProgressRepository 写入版本 2 文件。
+导航和分类选择只改变内存会话，不写文件。ReviewSession.Move 负责边界检查；ViewModel 仅在移动成功后更新显示和播放，不重复执行导航算法。Start 只接收分类，每次从第一词开始；LoadOrCreate 只接收单词本路径，不接收词库内容。评价前 Capture 深复制状态字典和队列到 ReviewSnapshot，再覆盖当前状态并前进；GetProgress 只返回可保存状态，ProgressRepository 写入版本 2 文件。
 
 成功后更新界面、数量和播放；失败时 Restore 恢复状态、分类、队列、位置与完成标记，不停留在未保存成功的新状态。
 
@@ -62,7 +62,7 @@ Models 的 ReviewProgress 只含可保存数据，Review 的 ReviewSnapshot 含�
 | `<单词本名>/audio/{stem}_uk.mp3/.wav`、`{stem}_us.mp3/.wav` | 单词英美音频文件 | 用户或音频准备工具 |
 | `<单词本名>/examples/{stem}_e{eid}_uk.mp3/.wav`、`{stem}_e{eid}_us.mp3/.wav` | 例句英美音频文件 | 用户或音频准备工具 |
 | `userdata/<单词本名>.progress.json` | 单词当前状态（版本 2） | 程序保存 |
-| `recitewords.settings.json` | 上次目录、词库、窗口信息 | 程序保存 |
+| `<主程序名>.settings.json` | 上次目录、词库、窗口信息 | 程序保存 |
 
 上表的单词本名指文件名去掉 `.json`，也是顶部下拉框显示的名称；JSON 的 `name` 只作为可选元数据，不参与下拉框显示。单词本的 `schema_version` 可以是任意正整数；进度和设置有各自独立的版本校验；音频文件不再依赖 JSON 索引，不能把单词本规则套用到这些文件。
 
@@ -75,3 +75,5 @@ Models 的 ReviewProgress 只含可保存数据，Review 的 ReviewSnapshot 含�
 破坏性升级不迁移旧进度，不读取旧 audio.json；旧单音标词库和版本 1 进度读取失败。没有增加数据库、播放器或通用字段框架。
 
 当前详细音频协议见 [音频文件规范](Audio-Format.md)。释义外框最低 5em，Etymology 在 Notes 前；筛选 ItemTemplate 用一个英文空格的实际宽度设置左边距。
+
+设置读取失败时使用默认设置并禁止覆盖原文件；后续启动目录提示与该错误合并，避免隐藏设置不能保存的原因。测试数据只写系统临时目录并在结束后清理，不生成截图或报告。

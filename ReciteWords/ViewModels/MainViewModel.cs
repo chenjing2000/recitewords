@@ -19,6 +19,7 @@ public class MainViewModel : INotifyPropertyChanged, IDisposable
     private WordListEntry? selectedWordList;
     private ReviewFilter selectedFilter;
     private bool progressWritable;
+    private bool settingsWritable = true;
     private bool loaded;
     private bool disposed;
     private int playbackRequest;
@@ -60,7 +61,7 @@ public class MainViewModel : INotifyPropertyChanged, IDisposable
         UsCommand = Command(() => PlayWord("us"), () => WordAudio("us") != null);
         player.PlaybackFailed += OnPlaybackFailed;
         try { Settings = settings.Load(); }
-        catch (Exception ex) when (FileError(ex)) { Warn("设置读取失败，使用默认设置：" + ex.Message); }
+        catch (Exception ex) when (FileError(ex)) { settingsWritable = false; Warn("设置读取失败，使用默认设置且不覆盖原文件：" + ex.Message); }
     }
     private SimpleCommand Command(Action action, Func<bool>? enabled = null)
     {
@@ -68,12 +69,15 @@ public class MainViewModel : INotifyPropertyChanged, IDisposable
     }
     public void Initialize(string defaultFolder)
     {
+        string settingsWarning = settingsWritable ? "" : warning;
         string folder = Settings.Folder;
         string? missing = null;
         if (folder.Length == 0) folder = defaultFolder;
         else if (!Directory.Exists(folder)) { missing = "上次文件夹不存在，已回到默认目录。"; folder = defaultFolder; }
         SelectFolder(folder);
         if (missing != null) Warn(missing);
+        if (settingsWarning.Length > 0 && warning != settingsWarning)
+            Warn(settingsWarning + "\n" + warning);
     }
     public WordListEntry? SelectedWordList
     {
@@ -181,8 +185,8 @@ public class MainViewModel : INotifyPropertyChanged, IDisposable
     private bool CanRate() => loaded && progressWritable && CurrentWord != null;
     public void Navigate(int offset)
     {
-        if (!loaded || !progressWritable || (offset == -1 && !session.CanMovePrevious) || (offset == 1 && !session.CanMoveNext)) return;
-        session.Move(offset); PublishCurrent();
+        if (!loaded || !progressWritable || !session.Move(offset)) return;
+        PublishCurrent();
     }
     public void Rate(StudyLevel level)
     {
@@ -218,6 +222,7 @@ public class MainViewModel : INotifyPropertyChanged, IDisposable
     private void OnPlaybackFailed(object? sender, string message) { Warn("本地音频播放失败：" + message); }
     public void SaveSettings()
     {
+        if (!settingsWritable) return;
         try { settings.Save(Settings); }
         catch (Exception ex) when (FileError(ex)) { Warn("设置保存失败：" + ex.Message); }
     }

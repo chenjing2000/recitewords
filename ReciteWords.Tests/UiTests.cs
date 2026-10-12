@@ -2,7 +2,6 @@ using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Documents;
 using System.Windows.Media;
-using System.Windows.Media.Imaging;
 using System.Windows.Threading;
 using System.Diagnostics;
 using ReciteWords.Audio;
@@ -154,21 +153,16 @@ internal static partial class Program
                 Equal(true, origin.X >= -0.5 && origin.X + control.ActualWidth <= root.ActualWidth + 0.5);
             }
             Equal("cognizant", vm.CurrentWord!.Text);
-            Equal(true, window.ActualWidth <= window.MaxWidth + 1); Equal(true, window.ActualHeight <= window.MaxHeight + 1);
             double originalLeft = window.Left;
-            double movingLeft = originalLeft + window.MaxWidth + 30;
+            double movingLeft = originalLeft + 100;
             window.Left = movingLeft; Pump(); Equal(movingLeft, window.Left);
             window.Left = originalLeft; Pump();
-            string output = Path.GetFullPath(Path.Combine(AppContext.BaseDirectory, "../../../../artifacts/qa")); Directory.CreateDirectory(output);
-            Capture(window, Path.Combine(output, "minimum-width.png"));
-            window.Height = Math.Min(window.MaxHeight, window.MinHeight + 260); Pump(); window.UpdateLayout();
+            window.Height = window.MinHeight + 260; Pump(); window.UpdateLayout();
             var continuation = exampleTitle.ContentStart.GetLineStartPosition(1)!;
             double continuationLeft = continuation.GetCharacterRect(LogicalDirection.Forward).Left;
             double narrowFieldLeft = exampleTitle.ContentStart.GetCharacterRect(LogicalDirection.Forward).Left;
             Equal(true, Math.Abs(continuationLeft - narrowFieldLeft - expectedIndent) < 1);
-            Capture(window, Path.Combine(output, "inline-example-narrow.png"));
-            window.Width = window.MaxWidth; window.Height = window.MaxHeight * 0.9; Pump(); window.UpdateLayout();
-            Capture(window, Path.Combine(output, "sample-definition.png"));
+            window.Width = 900; window.Height = 800; Pump(); window.UpdateLayout();
             window.Height = window.MinHeight; Pump(); window.UpdateLayout();
             var definition = (DefinitionView)window.FindName("Definition");
             var scroller = (ScrollViewer)definition.FindName("Scroller");
@@ -177,17 +171,16 @@ internal static partial class Program
             editor.RaiseEvent(new System.Windows.Input.MouseWheelEventArgs(System.Windows.Input.Mouse.PrimaryDevice, Environment.TickCount, 120) { RoutedEvent = System.Windows.Input.Mouse.PreviewMouseWheelEvent });
             Pump(); Equal(true, scroller.VerticalOffset < beforeWheel);
             scroller.ScrollToBottom(); Pump();
-            Capture(window, Path.Combine(output, "sample-etymology.png"));
             vm.Navigate(1); Pump(); Equal(false, vm.DefinitionVisible); Equal(0.0, scroller.VerticalOffset); vm.Navigate(-1); Pump();
             window.WindowState = WindowState.Maximized; Pump();
-            Equal(true, window.ActualWidth <= window.MaxWidth + 1); Equal(true, window.ActualHeight <= window.MaxHeight + 1);
+            Equal(double.PositiveInfinity, window.MaxWidth); Equal(double.PositiveInfinity, window.MaxHeight);
+            Equal(true, window.ActualWidth > 900);
             window.WindowState = WindowState.Normal; Pump();
             vm.Rate(ReciteWords.Models.StudyLevel.Mastered); Equal("address", vm.CurrentWord!.Text); vm.Navigate(-1); vm.Rate(ReciteWords.Models.StudyLevel.Unknown);
             Pump(); Equal("未学(5)", vm.Filters[1].Label); Equal("不懂(1)", vm.Filters[2].Label); Equal("掌握(0)", vm.Filters[4].Label);
             filterCombo.IsDropDownOpen = true; Pump();
-            Capture(window, Path.Combine(output, "filter-counts.png"));
             filterCombo.IsDropDownOpen = false; Pump();
-            window.Height = Math.Min(window.MaxHeight, window.MinHeight + 100); Pump(); window.UpdateLayout();
+            window.Height = window.MinHeight + 100; Pump(); window.UpdateLayout();
             var definitionBorder = (Border)window.FindName("DefinitionBorder");
             double restingDefinitionHeight = definitionBorder.ActualHeight;
             double restingButtonsY = unknown.TranslatePoint(new Point(), window).Y;
@@ -195,7 +188,6 @@ internal static partial class Program
             Equal(Visibility.Visible, informationBar.Visibility);
             Equal(true, definitionBorder.ActualHeight < restingDefinitionHeight);
             Equal(true, unknown.TranslatePoint(new Point(), window).Y < restingButtonsY);
-            Capture(window, Path.Combine(output, "information-bar.png"));
             var warningElapsed = Stopwatch.StartNew();
             while (warningElapsed.Elapsed < TimeSpan.FromSeconds(4.5)) { Pump(); Thread.Sleep(20); }
             Equal(true, vm.HasWarning);
@@ -204,7 +196,6 @@ internal static partial class Program
             Equal(Visibility.Collapsed, informationBar.Visibility);
             Equal(true, Math.Abs(definitionBorder.ActualHeight - restingDefinitionHeight) < 1);
             Equal(true, Math.Abs(unknown.TranslatePoint(new Point(), window).Y - restingButtonsY) < 1);
-            Capture(window, Path.Combine(output, "information-collapsed.png"));
             Check("focus uses pale teal without dotted visuals or layout shifts", () => VerifyFocusStyles(window));
             Check("global arrows and space only navigate or toggle definitions", () => VerifyGlobalKeys(window, vm, testPlayer));
             string longFolder = Path.Combine(Temp, "long-phonetics"); Directory.CreateDirectory(longFolder);
@@ -212,19 +203,17 @@ internal static partial class Program
             string longPhonetic = "/" + new string('a', 300) + "/";
             File.WriteAllText(longPath, Minimal.Replace("/əˈweə/", longPhonetic).Replace("/əˈwer/", longPhonetic));
             vm.SelectFolder(longFolder); Pump(); window.UpdateLayout();
-            Equal(true, window.MinWidth <= window.MaxWidth);
-            Equal(true, window.ActualWidth <= window.MaxWidth + 1);
+            Equal(true, double.IsFinite(window.MinWidth));
+            Equal(true, window.ActualWidth >= window.MinWidth - 1);
             Equal(longPhonetic, ukLabel.ToolTip); Equal(longPhonetic, usLabel.ToolTip);
             foreach (var button in new[] { wordUk, wordUs })
                 Equal(true, button.TranslatePoint(new Point(), root).X + button.ActualWidth <= root.ActualWidth + 1);
             window.Left += 1; Pump();
-            Capture(window, Path.Combine(output, "long-phonetic.png"));
             Check("example audio focus and playback preserve scrolled definition", () => VerifyExampleScroll(window, vm, testPlayer));
             vm.SelectFolder(folder); Pump();
             window.Close();
             var restored = new ReviewSession(); restored.Load(new WordListRepository().Load(Path.Combine(folder, "sample.json")), new ProgressRepository().LoadOrCreate(Path.Combine(folder, "sample.json")));
             Equal("cognizant", restored.CurrentWord!.Text); Equal(ReciteWords.Models.StudyLevel.Unknown, restored.GetProgress().Words["cognizant"]);
-            File.WriteAllText(Path.Combine(output, "ui-report.txt"), $"Window DIP: {window.ActualWidth} x {window.ActualHeight}; max {window.MaxWidth} x {window.MaxHeight}\nSample: 6 words; rating and reopen passed.\n");
             app.Shutdown();
         });
         Check("WPF MediaPlayer opens and completes local WAV", () => {
@@ -292,8 +281,6 @@ internal static partial class Program
             var item = (ComboBoxItem)combo.ItemContainerGenerator.ContainerFromIndex(0);
             Equal(true, item.Focus()); Pump(); Equal<Style?>(null, item.FocusVisualStyle);
             Equal(true, VisualChildren(item).OfType<Border>().Any(border => border.Background?.ToString() == "#FFE8F4F1"));
-            string popupOutput = Path.GetFullPath(Path.Combine(AppContext.BaseDirectory, "../../../../artifacts/qa"));
-            Capture(window, Path.Combine(popupOutput, "focus-" + name + ".png"));
             combo.RaiseEvent(new System.Windows.Input.KeyEventArgs(System.Windows.Input.Keyboard.PrimaryDevice, PresentationSource.FromVisual(window), Environment.TickCount, System.Windows.Input.Key.Escape) { RoutedEvent = System.Windows.Input.Keyboard.KeyDownEvent }); Pump();
             Equal(false, combo.IsDropDownOpen);
         }
@@ -316,8 +303,6 @@ internal static partial class Program
         Equal(true, unknown.MoveFocus(new System.Windows.Input.TraversalRequest(System.Windows.Input.FocusNavigationDirection.Next))); Pump();
         Equal("认识", ((Button)System.Windows.Input.Keyboard.FocusedElement).Content);
         Equal(false, VisualChildren(unknown).OfType<Border>().Any(border => border.Background?.ToString() == "#FFE8F4F1"));
-        string output = Path.GetFullPath(Path.Combine(AppContext.BaseDirectory, "../../../../artifacts/qa"));
-        Capture(window, Path.Combine(output, "focus-button.png"));
     }
     static void VerifyGlobalKeys(MainWindow window, MainViewModel vm, TestPlayer player)
     {
@@ -380,10 +365,4 @@ internal static partial class Program
         if (error != null) throw new Exception(error);
         Equal(true, opened); Equal(true, ended);
     }
-    static void Capture(Window window, string path)
-    {
-        var bitmap = new RenderTargetBitmap((int)Math.Ceiling(window.ActualWidth), (int)Math.Ceiling(window.ActualHeight), 96, 96, PixelFormats.Pbgra32);
-        bitmap.Render(window); var encoder = new PngBitmapEncoder(); encoder.Frames.Add(BitmapFrame.Create(bitmap)); using var output = File.Create(path); encoder.Save(output);
-    }
 }
-

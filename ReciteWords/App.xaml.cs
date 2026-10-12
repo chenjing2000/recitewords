@@ -12,8 +12,9 @@ public partial class App : Application
     protected override void OnStartup(StartupEventArgs e)
     {
         base.OnStartup(e);
+        string programName = Path.GetFileNameWithoutExtension(Environment.ProcessPath!);
         var vm = new MainViewModel(new WordListRepository(), new ProgressRepository(),
-            new SettingsRepository(Path.Combine(AppContext.BaseDirectory, "recitewords.settings.json")),
+            new SettingsRepository(Path.Combine(AppContext.BaseDirectory, programName + ".settings.json")),
             new ReviewSession(), new AudioCatalog(), new WpfAudioPlayer(),
             action => Dispatcher.BeginInvoke(action, DispatcherPriority.Background));
         var window = new MainWindow(vm); MainWindow = window;

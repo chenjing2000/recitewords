@@ -34,6 +34,33 @@ internal static partial class Program
     static void ViewModelTests()
     {
         string folder = Path.Combine(Temp, "vm"); Directory.CreateDirectory(folder);
+        Check("unreadable settings are warned about and never overwritten", () => {
+            string path = Path.Combine(Temp, "Broken.settings.json");
+            File.WriteAllText(path, "{broken");
+            using var vm = new MainViewModel(new WordListRepository(), new TestProgress(), new SettingsRepository(path), new ReviewSession(), new TestCatalog(), new TestPlayer(), _ => { });
+            Equal(true, vm.Warning.Contains("设置读取失败"));
+            vm.SaveSettings();
+            Equal("{broken", File.ReadAllText(path));
+        });
+        Check("startup folder warning cannot hide unreadable settings", () => {
+            string path = Path.Combine(Temp, "Startup.settings.json");
+            File.WriteAllText(path, "{broken");
+            string emptyFolder = Path.Combine(Temp, "startup-empty"); Directory.CreateDirectory(emptyFolder);
+            using var vm = new MainViewModel(new WordListRepository(), new TestProgress(), new SettingsRepository(path), new ReviewSession(), new TestCatalog(), new TestPlayer(), _ => { });
+            vm.Initialize(emptyFolder);
+            Equal(true, vm.Warning.Contains("设置读取失败"));
+            Equal(true, vm.Warning.Contains("没有有效单词本"));
+            vm.SaveSettings(); Equal("{broken", File.ReadAllText(path));
+        });
+        foreach (string property in new[] { "folder", "word_list_file" })
+            Check("invalid Unicode settings report an error: " + property, () => {
+                string path = Path.Combine(Temp, property + ".settings.json");
+                string invalid = "{\"schema_version\":1,\"" + property + "\":\"\\ud800\"}";
+                File.WriteAllText(path, invalid);
+                using var vm = new MainViewModel(new WordListRepository(), new TestProgress(), new SettingsRepository(path), new ReviewSession(), new TestCatalog(), new TestPlayer(), _ => { });
+                Equal(true, vm.Warning.Contains("设置读取失败"));
+                vm.SaveSettings(); Equal(invalid, File.ReadAllText(path));
+            });
         File.WriteAllText(Path.Combine(folder, "sample.json"), "{\"words\":[{\"word\":\"a\",\"phonetic_uk\":\"\",\"phonetic_us\":\"\",\"senses\":[{\"pos\":\"n.\",\"chinese_meaning\":\"甲\"}]},{\"word\":\"b\",\"phonetic_uk\":\"\",\"phonetic_us\":\"\",\"senses\":[{\"pos\":\"n.\",\"chinese_meaning\":\"乙\"}]}]}");
         Check("folder without valid wordlists is remembered after restart", () => {
             string emptyFolder = Path.Combine(Temp, "empty-folder"); Directory.CreateDirectory(emptyFolder);
@@ -108,6 +135,15 @@ internal static partial class Program
             using var vm = new MainViewModel(new WordListRepository(), progress, new SettingsRepository(Path.Combine(folder, "navigation.tmp")), new ReviewSession(), new TestCatalog(), new TestPlayer(), _ => { });
             vm.SelectFolder(folder); vm.Navigate(1); vm.Navigate(-1); vm.SelectedFilter = ReviewFilter.Unseen;
             Equal(0, progress.Saves); vm.Rate(StudyLevel.Unknown); Equal(1, progress.Saves);
+        });
+        Check("ignored navigation keeps definition and playback unchanged", () => {
+            var queue = new List<Action>();
+            using var vm = new MainViewModel(new WordListRepository(), new TestProgress(), new SettingsRepository(Path.Combine(folder, "ignored-navigation.tmp")), new ReviewSession(), new TestCatalog(), new TestPlayer(), action => queue.Add(action));
+            vm.SelectFolder(folder); vm.RevealDefinition();
+            vm.Navigate(-1); vm.Navigate(0); vm.Navigate(2);
+            Equal("a", vm.CurrentWord!.Text); Equal(true, vm.DefinitionVisible); Equal(1, queue.Count);
+            vm.Navigate(1); vm.RevealDefinition(); vm.Navigate(1);
+            Equal("b", vm.CurrentWord!.Text); Equal(true, vm.DefinitionVisible); Equal(2, queue.Count);
         });
     }
 }

@@ -2,9 +2,9 @@
 
 ## 环境与启动
 
-使用 Windows 和 .NET 10 Windows Desktop Runtime；本机验证版本为 10.0.11，SDK 为 10.0.400。无第三方 NuGet 包、数据库或 Python 运行依赖。
+使用 Windows x64 和 .NET 10 Windows Desktop Runtime（x64）；本机验证版本为 10.0.11，SDK 为 10.0.400。无第三方 NuGet 包、数据库或 Python 运行依赖。
 
-启动 `artifacts/app/ReciteWords.exe`，点击右上文件夹图标选择单词本目录。只扫描当前目录直属 JSON，不递归；无效文件跳过并提示，其它有效词库正常打开。顶部下拉框始终显示不带扩展名的实际文件名，JSON 的 `name` 不参与显示。上次目录、词库、窗口位置及尺寸存入 EXE 同目录的 `recitewords.settings.json`。程序和词库目录须可写。
+启动 `dist/ReciteWords.exe`，点击右上文件夹图标选择单词本目录。只扫描当前目录直属 JSON，不递归；无效文件跳过并提示，其它有效词库正常打开。顶部下拉框始终显示不带扩展名的实际文件名，JSON 的 `name` 不参与显示。上次目录、词库、窗口位置及尺寸存入 EXE 同目录的 `<主程序名>.settings.json`（当前为 `ReciteWords.settings.json`）。程序和词库目录须可写。
 
 ## 进度与复习
 
@@ -28,7 +28,7 @@
 
 ## 界面
 
-窗口最大外宽为当前屏幕宽度的 70%，最大高度为工作区高度；最大化也遵守此限制。窗口下限按控件宽度、固定行和释义外框至少 5em计算，不能缩到遮盖控件。超长音标限制占用宽度，省略显示时可悬停查看全文，两个喇叭仍可见。混合 DPI 多显示器行为须在相应设备上验收。
+程序不设置窗口最大宽度或高度；拖动缩放与最大化遵循 Windows 的默认行为，最大化通常填满显示器工作区。首次默认尺寸为 700×850 DIP，必要时按工作区缩小；之后恢复保存的尺寸，启动时将位置移回可见区域。这些启动调整不是运行中的最大尺寸限制。窗口下限按控件宽度、固定行和释义外框至少 5em计算，不能缩到遮盖控件。超长音标限制占用宽度，省略显示时可悬停查看全文，两个喇叭仍可见。混合 DPI 多显示器行为须在相应设备上验收。
 
 界面默认 11pt，单词 12pt、#b81a35。pos、english_meaning、chinese_meaning 内容为 #c8161d，register 保留原色；其它字段标题为 #007175，正文保留原色。字段/词性首行左对齐，其它行缩进 2em。词源 Etymology 显示在备注 Notes 前。释义外框最小高度为 5 倍正文 FontSize（11pt 时约 73.33 DIP，含边框和内部留白）。正文行高 20 DIP，自动换行；滚动条宽 7 DIP，只由用户手动滚动。点击例句英音或美音喇叭保持当前滚动位置，换词时仍回到顶部。
 
@@ -46,8 +46,20 @@
 
 ## 构建、测试与发布
 
-命令见 README。测试在 `artifacts/tests` 创建独立临时目录并自行清理；`--ui-qa` 生成当前验收截图。WAV/MP3 解码检查静音执行，不能代替真实发音试听。
+命令见 README。测试在 Windows 临时目录创建 `ReciteWords.Tests-<随机标识>`，结束后自动删除；`--ui-qa` 保留真实窗口行为检查，不生成截图或报告文件，结果仅输出到终端。WAV/MP3 解码检查静音执行，不能代替真实发音试听。项目不再创建 artifacts 目录，发布仅输出到 dist。
 
-关闭应用，发布到暂存目录并验证，再将 ReciteWords.exe、ReciteWords.dll、ReciteWords.deps.json、ReciteWords.runtimeconfig.json 四个文件复制到 `artifacts/app`。保留设置、wordlist 和 userdata。清理后 bin/obj 已删除，下次正常构建会自动恢复依赖元数据并生成编译文件。
+从仓库根目录执行：
+
+```powershell
+dotnet publish ReciteWords -c Release -r win-x64 --self-contained false -p:PublishSingleFile=true -p:DebugType=None -p:DebugSymbols=false -o dist
+```
+
+发布产物只有 `dist/ReciteWords.exe`，程序集、图标、deps 和 runtimeconfig 均嵌入 EXE；不包含 .NET 运行时，不需要另外复制 DLL、deps.json、runtimeconfig.json 或 PDB。更新前关闭程序，保留已有配置、wordlist 和 userdata，不清空 dist。
+
+首次启动立即在实际 EXE 所在目录创建 `<主程序名>.settings.json`，例如 `ReciteWords.exe` 对应 `ReciteWords.settings.json`；之后读取并更新该文件。配置保存上次文件夹、单词本和窗口位置、尺寸。文件名随实际 EXE 名称确定，不读取旧的其它名称作为回退。设置读取失败时提示并停止写入该配置，以免覆盖损坏内容；后续启动目录提示会与读取错误合并，不隐藏错误；目录不可写时提示保存失败，不改存到其它目录。
+
+缺少匹配的 .NET 组件时，程序代码尚不能运行，由 .NET 启动宿主显示安装提示与下载入口。安装 x64 版本的 .NET 10 Windows Desktop Runtime 10.0.11 或后续兼容补丁后重新启动；普通 .NET Runtime 不包含 WPF，SDK 不是用户运行所必需的。下载入口：https://dotnet.microsoft.com/download/dotnet/10.0 。
+
+发布后检查：只有 EXE 作为程序文件；首次启动创建配置；再次启动恢复设置；重命名 EXE 后生成相应配置；最大化和缩放正常；本地单词本、音频与进度可读。缺少运行时的安装提示需要单独验证，不能仅凭构建成功推断。
 
 .gitignore 排除发布产物、编译文件和个人数据；上传 GitHub 时提交源代码、文档、开发工具与固定测试夹具即可。

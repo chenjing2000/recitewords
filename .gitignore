@@ -1,6 +1,6 @@
 **/bin/
 **/obj/
-/artifacts/
+/dist/
 /.superpowers/
 /.vs/
 /.idea/
@@ -9,7 +9,7 @@
 *.suo
 *.log
 *.tmp
-recitewords.settings.json
+*.settings.json
 **/userdata/
 /wordlist/
 Thumbs.db

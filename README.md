@@ -4,17 +4,15 @@
 
 ## 运行
 
-本机需要 .NET 10 Windows Desktop Runtime 10.0.11 或兼容的后续补丁。发布目录中的四个文件须放在一起：
+本机需要 x64 版本的 .NET 10 Windows Desktop Runtime 10.0.11 或兼容的后续补丁；不需要 SDK。发布为不包含运行时的单文件 EXE，缺少运行时时由 .NET 启动宿主提示安装。
 
 ```text
-artifacts/app/
+dist/
   ReciteWords.exe
-  ReciteWords.dll
-  ReciteWords.deps.json
-  ReciteWords.runtimeconfig.json
+  ReciteWords.settings.json  # 首次运行自动创建
 ```
 
-双击 `ReciteWords.exe`，点击“文件夹”选择单词本所在目录。首次默认读取程序旁的 `wordlist/`，以后恢复上次选择。随本地发布附有六词小样本；示例不包含真实发音文件，发音按钮会禁用。个人词库、音频、设置及学习记录不纳入 Git。
+双击 `ReciteWords.exe`，点击“文件夹”选择单词本所在目录。首次默认读取程序旁的 `wordlist/`，以后恢复上次选择。单词本与音频由用户独立准备。个人词库、音频、设置及学习记录不纳入 Git。
 
 ## 使用
 
@@ -65,17 +63,17 @@ dotnet run --project ReciteWords.Tests -c Release
 dotnet run --project ReciteWords.Tests -c Release -- --ui-qa
 ```
 
-普通测试使用项目 `artifacts/tests/` 下的独立临时词库。`--ui-qa` 另外创建真实 WPF 窗口并生成 `artifacts/qa/sample-definition.png`，检验本地测试 WAV 的解码和播放结束（静音），不会修改原词库。这个测试验证播放路径，不能代替对真实英美音文件的试听。
+测试使用 Windows 临时目录中的独立词库，完成后自动删除。`--ui-qa` 另外创建真实 WPF 窗口，检查布局、焦点、快捷键、滚动及本地 WAV 解码与播放结束（静音）；不生成截图或报告文件，结果仅输出到终端，不会修改原词库。播放检查不能代替真实发音试听。
 
 ## 发布
 
-发布方式与 EnglishBench 相同，依赖已安装运行时，不制作安装包或单文件包。
+发布为 Windows x64 单文件程序，不捆绑 .NET 运行时。以下命令从仓库根目录执行，输出到 dist：
 
 ```powershell
-dotnet publish ReciteWords -c Release --self-contained false -p:DebugType=None -p:DebugSymbols=false -o artifacts/app-update
+dotnet publish ReciteWords -c Release -r win-x64 --self-contained false -p:PublishSingleFile=true -p:DebugType=None -p:DebugSymbols=false -o dist
 ```
 
-关闭运行中的软件，验证暂存发布后，将四个运行文件更新到 `artifacts/app/`。保留 `recitewords.settings.json`、词库和 userdata。详细说明见 [运行与交付](docs/Getting-Started.md)。
+更新前关闭运行中的软件；发布只更新 EXE，保留 `<主程序名>.settings.json`、词库和 userdata。当前配置文件为 `dist/ReciteWords.settings.json`，首次启动时自动创建；EXE 改名后使用相应的新配置文件名。详细说明见 [运行与交付](docs/Getting-Started.md)。
 
 ## 模块
 
