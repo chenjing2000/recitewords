@@ -66,6 +66,10 @@ Models 的 ReviewProgress 只含可保存数据，Review 的 ReviewSnapshot 含�
 
 上表的单词本名指文件名去掉 `.json`，也是顶部下拉框显示的名称；JSON 的 `name` 只作为可选元数据，不参与下拉框显示。单词本的 `schema_version` 可以是任意正整数；进度和设置有各自独立的版本校验；音频文件不再依赖 JSON 索引，不能把单词本规则套用到这些文件。
 
+## 本轮局部简化
+
+ProgressRepository 遍历学习状态属性时直接读取 JsonProperty.Value，通过 Common.JsonFields.ReadString 校验字符串与 Unicode，避免对同一 JSON 对象逐项按键重新查找。JsonFileWriter 在写入前解析完整路径，保证只有文件名的相对设置路径也能创建和替换。公开服务接口、状态格式及默认设置位置不变；实际检查和保留设计理由见 [2026-10-13 代码审查](Code-Review-2026-10-13.md)。
+
 ## 维护与验证
 
 修改文件规则时检查 Storage 与对应测试；修改学习规则时检查 Review 及保存回滚路径；修改显示时检查 Views、ViewModel 绑定与真实 WPF 窗口测试。正式发布前再验证构建、代表性数据及启动关闭，不能仅凭文档或代码外观声称功能完成。

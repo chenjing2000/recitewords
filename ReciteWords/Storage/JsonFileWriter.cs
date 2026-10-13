@@ -13,6 +13,7 @@ internal static class JsonFileWriter
     };
     public static void Write(string path, string text)
     {
+        path = Path.GetFullPath(path);
         Directory.CreateDirectory(Path.GetDirectoryName(path)!);
         string temporary = path + "." + Guid.NewGuid().ToString("N") + ".tmp";
         try

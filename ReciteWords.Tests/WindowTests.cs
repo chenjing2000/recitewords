@@ -4,6 +4,21 @@ internal static partial class Program
 {
     static void WindowTests()
     {
+        Check("relative settings path initializes and replaces in the working directory", () => {
+            string originalDirectory = Environment.CurrentDirectory;
+            string folder = Path.Combine(Temp, "relative-settings"); Directory.CreateDirectory(folder);
+            try
+            {
+                Environment.CurrentDirectory = folder;
+                var repository = new ReciteWords.Storage.SettingsRepository("Relative.settings.json");
+                var settings = repository.Load();
+                Equal(true, File.Exists(Path.Combine(folder, "Relative.settings.json")));
+                settings.Folder = "chosen"; repository.Save(settings);
+                Equal("chosen", repository.Load().Folder);
+                Equal(0, Directory.GetFiles(folder, "*.tmp").Length);
+            }
+            finally { Environment.CurrentDirectory = originalDirectory; }
+        });
         Check("missing settings are initialized on disk", () => {
             string path = Path.Combine(Temp, "Fresh.settings.json");
             var repository = new ReciteWords.Storage.SettingsRepository(path);

@@ -22,7 +22,8 @@ public class ProgressRepository : IProgressRepository
         var result = new ReviewProgress();
         foreach (var property in items.EnumerateObject())
         {
-            string text = JsonFields.Text(items, property.Name, true);
+            string text = JsonFields.ReadString(property.Value, property.Name).Trim();
+            if (text.Length == 0) throw new InvalidDataException(property.Name + " 不能为空");
             StudyLevel level;
             if (text == "Unknown") level = StudyLevel.Unknown;
             else if (text == "Familiar") level = StudyLevel.Familiar;

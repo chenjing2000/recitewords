@@ -24,7 +24,6 @@ internal static class JsonFields
             if (required) throw new InvalidDataException("缺少 " + key);
             return "";
         }
-        if (value.ValueKind != JsonValueKind.String) throw new InvalidDataException(key + " 必须是字符串");
         string text = ReadString(value, key).Trim();
         if (required && !allowEmpty && text.Length == 0) throw new InvalidDataException(key + " 不能为空");
         return text;
@@ -48,8 +47,9 @@ internal static class JsonFields
         }
         return result;
     }
-    private static string ReadString(JsonElement value, string key)
+    public static string ReadString(JsonElement value, string key)
     {
+        if (value.ValueKind != JsonValueKind.String) throw new InvalidDataException(key + " 必须是字符串");
         try { return value.GetString()!; }
         catch (InvalidOperationException ex) { throw new InvalidDataException(key + " 包含无效 Unicode", ex); }
     }

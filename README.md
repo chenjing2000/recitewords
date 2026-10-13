@@ -59,11 +59,12 @@ WordLists/
 
 ```powershell
 dotnet build ReciteWords -c Release
-dotnet run --project ReciteWords.Tests -c Release
-dotnet run --project ReciteWords.Tests -c Release -- --ui-qa
+.\tools\Test.ps1 -Suite Core
+.\tools\Test.ps1 -Suite UI
+.\tools\Test.ps1 -Suite Full
 ```
 
-测试使用 Windows 临时目录中的独立词库，完成后自动删除。`--ui-qa` 另外创建真实 WPF 窗口，检查布局、焦点、快捷键、滚动及本地 WAV 解码与播放结束（静音）；不生成截图或报告文件，结果仅输出到终端，不会修改原词库。播放检查不能代替真实发音试听。
+测试使用 Windows 临时目录中的独立词库，完成后自动删除。UI 和 Full 另外创建真实 WPF 窗口，检查布局、焦点、快捷键、滚动及本地 WAV 解码与播放结束（静音）；不生成截图或报告文件，结果仅输出到终端，不会修改原词库。播放检查不能代替真实发音试听。脚本检查所有 .ps1 为 English ASCII；详细入口及串行验收规则见 [测试说明](docs/Testing.md)。
 
 ## 发布
 
@@ -81,7 +82,7 @@ dotnet run --project ReciteWords.Tests -c Release -- --ui-qa
 
 Unicode 拼写匹配采用随程序嵌入的 Unicode 15.1 casefold 数据，保持 Python 格式的大小写比较语义。`tools/generate_case_folding.py` 仅是开发时的数据生成工具；发布程序不依赖 Python。
 
-本轮审查、整改理由和验证范围见 [代码审查报告](docs/Code-Review.md)。
+本轮审查、整改理由和验证范围见 [代码审查报告](docs/Code-Review-2026-10-13.md)；[此前审查](docs/Code-Review.md) 保留为历史记录。
 
 当前音频与界面规则见 [音频文件规范](docs/Audio-Format.md)。
 
@@ -92,6 +93,4 @@ Unicode 拼写匹配采用随程序嵌入的 Unicode 15.1 casefold 数据，保�
 发布入口统一为 `.\tools\Publish.ps1`，参数统一保存在主项目的 `Properties/PublishProfiles/Portable.pubxml`。详见[统一发布流程](docs/Publishing.md)、[2026-10-13 体检报告](docs/Health-Check-2026-10-13.md)和[发布说明](docs/Release-Notes.md)。
 
 
-## Unified testing and acceptance
-
-Use `.\tools\Test.ps1 -Suite Core`, `-Suite UI`, or `-Suite Full`. After publishing, run `.\tools\Test-PublishedApp.ps1`. External audio/article/dictionary paths are optional explicit arguments; missing optional integration data is reported as skipped. See the [documentation index](docs/README.md) and [test guide](docs/Testing.md). PowerShell source is English-only.
+发布后运行 `.\tools\Test-PublishedApp.ps1` 验证独立目录启动、配置位置和运行时缺失提示；具体流程见 [测试说明](docs/Testing.md)。

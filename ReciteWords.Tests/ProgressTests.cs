@@ -46,6 +46,7 @@ internal static partial class Program
             "{\"application\":\"ReciteWords\",\"schema_version\":2,\"words\":{\"a\":{\"level\":\"Unknown\",\"review_count\":1}}}",
             "{\"application\":\"ReciteWords\",\"schema_version\":2,\"words\":{\"a\":\"unknown\"}}",
             "{\"application\":\"ReciteWords\",\"schema_version\":2,\"words\":{\"A\":\"Unknown\"}}",
+            "{\"application\":\"ReciteWords\",\"schema_version\":2,\"words\":{\"a\":\"\\ud800\"}}",
             "{\"application\":\"ReciteWords\",\"schema_version\":2,\"words\":{},\"position\":1}",
             "{\"application\":\"ReciteWords\",\"schema_version\":2,\"words\":{\"a\":0}}"
         })

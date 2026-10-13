@@ -34,3 +34,9 @@ Full: 99 existing application/UI/audio checks passed. No external media or Full 
 Published EXE acceptance passed: isolated EXE-only folder with spaces, renamed executable, a different working directory, correct configuration placement, clean shutdown, and native missing-.NET installation instructions under an isolated runtime root. Installed runtimes and original media were not modified. This verifies automated behavior; human listening and a fresh-machine graphical runtime prompt were not performed.
 
 The orchestration regression passed success, failure rejection, and optional-data handling checks. PowerShell source was verified as English ASCII with no syntax errors. Use [Testing](Testing.md) for the shared entry points; stage counts and individual case counts are reported separately.
+
+## Code audit final verification
+
+101 application/UI/audio checks passed, including the new relative-settings-path and malformed-Unicode cases. All Full groups passed with zero failures and zero skips. The newly published portable EXE passed isolated renamed-file launch, configuration placement, clean shutdown, and missing-.NET instruction checks. See [Code Review](Code-Review-2026-10-13.md) for module assessment, actual changes and preserved complexity.
+
+Original article files and the selected audio were verified unchanged with 370 SHA-256 comparisons. UI and real playback checks were run serially. Manual listening and a clean-machine graphical runtime prompt were not performed. Regenerable compilation and test output are cleaned after verification; dist, settings and user media are retained.

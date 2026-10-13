@@ -1,6 +1,6 @@
 # ReciteWords documentation
 
-All four applications use the following document responsibilities. Application-specific formats and architecture remain separate reference pages.
+These pages describe ReciteWords. File formats and architecture remain separate reference pages; testing and publishing commands use the unified tools.
 
 | Document | Responsibility |
 | --- | --- |
@@ -11,6 +11,7 @@ All four applications use the following document responsibilities. Application-s
 | [Publishing](Publishing.md) | Portable profile, staged updates, and GitHub Release workflow |
 | [Release Notes](Release-Notes.md) | Distribution changes and runtime requirements |
 | [Health Check](Health-Check-2026-10-13.md) | Dated verification evidence and limitations |
+| [Code Review](Code-Review-2026-10-13.md) | Current module assessment, local fixes, retained design, and verified scope |
 
 ## Application-specific references
 
@@ -20,6 +21,14 @@ All four applications use the following document responsibilities. Application-s
 - [Review progress](Progress-Format.md)
 - [Audio naming](Audio-Format.md)
 - [Module design](Module-Design.md)
+
+## Historical references
+
+- [Previous code review](Code-Review.md)
+- [Design purpose](Design-Purpose.md)
+- [Format upgrade](Format-Upgrade.md)
+- [Implementation report](Implementation-Report.md)
+- [Original implementation plan](superpowers/plans/2026-10-04-recitewords-implementation-plan.md)
 
 ## Maintenance rules
 
