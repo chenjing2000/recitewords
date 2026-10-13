@@ -27,3 +27,10 @@ powershell.exe -NoProfile -ExecutionPolicy Bypass -File .\tools\Publish.ps1
 ```
 
 发布配置和配置保留规则见 [统一发布流程](Publishing.md)。
+## Unified testing and acceptance verification
+
+Full: 99 existing application/UI/audio checks passed. No external media or Full skips were required.
+
+Published EXE acceptance passed: isolated EXE-only folder with spaces, renamed executable, a different working directory, correct configuration placement, clean shutdown, and native missing-.NET installation instructions under an isolated runtime root. Installed runtimes and original media were not modified. This verifies automated behavior; human listening and a fresh-machine graphical runtime prompt were not performed.
+
+The orchestration regression passed success, failure rejection, and optional-data handling checks. PowerShell source was verified as English ASCII with no syntax errors. Use [Testing](Testing.md) for the shared entry points; stage counts and individual case counts are reported separately.

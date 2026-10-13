@@ -25,3 +25,7 @@ powershell.exe -NoProfile -ExecutionPolicy Bypass -File .\tools\Test-Publish.ps1
 测试只替代外部 dotnet 构建过程，实际运行发布脚本并操作临时文件，覆盖失败构建、意外 DLL、EXE 占用和用户配置保留。正式 EXE 需单独验证，结果见[本次体检](Health-Check-2026-10-13.md)。
 
 GitHub 分发统一通过唯一的 portable-* 标签：先审查、验证并提交源码，再推送标签。.github/workflows/release.yml 在 Windows 上执行同样的保护测试和发布脚本，使用 docs/Release-Notes.md 创建 Release 并上传 EXE。普通提交不会触发 Release；后续发新标签前更新发布说明。EXE 作为 Release 附件，不将 dist、用户配置、词库或媒体提交进 Git。
+
+## Unified release verification
+
+Run `tools/Test.ps1 -Suite Core` before publishing and `tools/Test-PublishedApp.ps1` afterward. The GitHub tag workflow now performs both steps before creating the Release. Local real-content Full checks are documented in [Testing](Testing.md).
