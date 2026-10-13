@@ -51,7 +51,7 @@
 从仓库根目录执行：
 
 ```powershell
-dotnet publish ReciteWords -c Release -r win-x64 --self-contained false -p:PublishSingleFile=true -p:DebugType=None -p:DebugSymbols=false -o dist
+.\tools\Publish.ps1
 ```
 
 发布产物只有 `dist/ReciteWords.exe`，程序集、图标、deps 和 runtimeconfig 均嵌入 EXE；不包含 .NET 运行时，不需要另外复制 DLL、deps.json、runtimeconfig.json 或 PDB。更新前关闭程序，保留已有配置、wordlist 和 userdata，不清空 dist。

@@ -70,7 +70,7 @@ dotnet run --project ReciteWords.Tests -c Release -- --ui-qa
 发布为 Windows x64 单文件程序，不捆绑 .NET 运行时。以下命令从仓库根目录执行，输出到 dist：
 
 ```powershell
-dotnet publish ReciteWords -c Release -r win-x64 --self-contained false -p:PublishSingleFile=true -p:DebugType=None -p:DebugSymbols=false -o dist
+.\tools\Publish.ps1
 ```
 
 更新前关闭运行中的软件；发布只更新 EXE，保留 `<主程序名>.settings.json`、词库和 userdata。当前配置文件为 `dist/ReciteWords.settings.json`，首次启动时自动创建；EXE 改名后使用相应的新配置文件名。详细说明见 [运行与交付](docs/Getting-Started.md)。
@@ -86,3 +86,7 @@ Unicode 拼写匹配采用随程序嵌入的 Unicode 15.1 casefold 数据，保�
 当前音频与界面规则见 [音频文件规范](docs/Audio-Format.md)。
 
 设计目的、模块功能、新格式规范及其他说明见 [文档索引](docs/README.md)。
+
+## 统一发布与本次体检
+
+发布入口统一为 `.\tools\Publish.ps1`，参数统一保存在主项目的 `Properties/PublishProfiles/Portable.pubxml`。详见[统一发布流程](docs/Publishing.md)、[2026-10-13 体检报告](docs/Health-Check-2026-10-13.md)和[发布说明](docs/Release-Notes.md)。
