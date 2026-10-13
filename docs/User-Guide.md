@@ -20,7 +20,7 @@
 
 ## 音频
 
-`education.json` 的单词音频放在同目录 `education/audio/` 下，直接按 `{stem}_uk.mp3`、`{stem}_us.mp3` 查找，也支持同名 WAV，MP3 优先。不读取旧 `audio.json`。主体 stem 由 word 去除首尾空白后，将每个非 ASCII 字母/数字替换为 `_` 得到；不合并或去除下划线、不转换大小写。例如 one's own 使用 one_s_own_uk.mp3。重复主体不再拒绝导入；按单词本顺序只给首词音频资格，后续词条禁用全部音频，首词文件缺失也不让后续词播放。word 显示及进度键不变。已有音频不会被自动重命名，也不按旧文件名回退。例句直接读取 education/examples/ 下的 `{stem}_e{eid}_uk.mp3/.wav`、`{stem}_e{eid}_us.mp3/.wav`，不读取 examples.json。eid 为每词实际英文例句顺序的两位字符串，从 01 起，可以跨词重复；缺少 eid 的例句显示但不能播放。完整规则见 [音频文件规范](Audio-Format.md)。
+`education.json` 的单词音频放在同目录 `education/audio/` 下，直接按 `{stem}_uk.mp3`、`{stem}_us.mp3` 查找，也支持同名 WAV，MP3 存在时优先，MP3 缺失才选 WAV，解码失败不回退。不读取旧 `audio.json`。主体 stem 由 word 去除首尾空白、按 invariant-culture 转小写后，将每个非 ASCII `a-z`/`0-9` 字符替换为 `_` 得到；合并连续下划线并去掉首尾下划线。例如 one's own 使用 one_s_own_uk.mp3。重复主体不再拒绝导入；按单词本顺序只给首词音频资格，后续词条禁用全部音频，首词文件缺失也不让后续词播放。word 显示及进度键不变。已有音频不会被自动重命名，也不按旧文件名回退。例句直接读取 education/audio_sentences/ 下的 `{stem}_e{eid}_uk.mp3/.wav`、`{stem}_e{eid}_us.mp3/.wav`，不读取 examples.json。eid 为每词实际英文例句顺序的两位字符串，从 01 起，可以跨词重复；缺少 eid 的例句显示但不能播放。完整规则见 [音频文件规范](Audio-Format.md)。
 
 出现单词时自动读 UK；US 手动点击。缺失音频禁用对应喇叭，不下载、不合成。单词和例句共用播放器，新播放停止旧播放，快速切词会取消尚未执行的旧播放。
 
@@ -47,3 +47,5 @@
 ## 维护与配置
 
 测试与验收见 [Testing](Testing.md)，构建和发布见 [Publishing](Publishing.md)，配置保存与异常处理见 [Configuration](Configuration.md)。
+
+音频统一协议不兼容旧目录、旧命名和索引，不自动迁移资源。空 stem 保留词条但禁用全部音频。旧 JSON 音频路径读取时忽略，外部工具保存时删除；程序不重写源词库。

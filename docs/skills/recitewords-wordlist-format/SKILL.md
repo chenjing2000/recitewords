@@ -68,23 +68,25 @@ description: Use when generating, editing, or checking ReciteWords vocabulary JS
 
 ## 本地音频命名与读取
 
-单词本 `education.json` 的单词音频目录为同级 `education/audio/`，按单词文本命名：`{stem}_uk.mp3`、`{stem}_us.mp3`，也支持同名 `.wav`。同一口音两种格式都存在时优先 `.mp3`。例如 `loyalty_uk.mp3`、`loyalty_us.mp3`，不使用 `wid`。
+单词本 `education.json` 的单词音频目录为同级 `education/audio/`，按单词文本命名：`{stem}_uk.mp3`、`{stem}_us.mp3`，也支持同名 `.wav`。同一口音两种格式都存在时优先 `.mp3`；只有 MP3 不存在才选 WAV，MP3 解码失败不回退 WAV。例如 `loyalty_uk.mp3`、`loyalty_us.mp3`，不使用 `wid`。
 
-文件名主体 `stem` 的生成规则：先去除 `word` 首尾空白，再逐个将 `[^0-9a-zA-Z]` 匹配的字符替换为英文下划线 `_`。不合并连续下划线，不删除首尾下划线，不改变字母大小写；只转换主体，不转换目录分隔符、口音后缀或扩展名。
+文件名主体 `stem` 的生成规则：先去除 word 首尾空白，按 invariant-culture 转小写，再将 ASCII `a-z`、`0-9` 以外的字符替换为英文下划线 `_`，合并连续下划线并去掉首尾下划线。只转换主体，不转换目录分隔符、口音后缀或扩展名。
 
-例如 `take care of` → `take_care_of`，`one's own` → `one_s_own`，`well-being` → `well_being`，`a / b` → `a___b`，`café` → `caf_`。对应文件为 `one_s_own_uk.mp3`、`one_s_own_us.mp3`（或同名 WAV）。准备音频文件和程序查找音频必须使用相同转换规则。
+例如 `take care of` → `take_care_of`，`one's own` → `one_s_own`，`well-being` → `well_being`，` A / B ` → `a_b`，`café` → `caf`。对应文件为 `one_s_own_uk.mp3`、`one_s_own_us.mp3`（或同名 WAV）。准备音频文件和程序查找音频必须使用相同转换规则。
 
 同一单词本按 words 数组顺序决定 stem 的首次拥有者，比较时不区分大小写。well-being 和 well being 同为 well_being，但两词都保留在单词本中；只有第一个词有音频资格，后续词跳过所有音频，包括单词英美音和全部例句英美音，不拒绝整本词库、不追加编号。
 
-准备音频时，遍历前先建立空 seen_stems。每遇到一个词，先计算 stem：若已存在，立即跳过该词的全部生成和写入；否则立即加入集合，再尝试生成。首次生成失败、缺失任一口音或尚未写出任何文件，都不能释放 stem 给后面的词。不要通过“文件是否存在”判断是否重复，不从实际成功写入的文件重建资格。
+准备音频时，遍历前先建立空 seen_stems。每遇到一个词，先计算 stem：若为空，保留词条但跳过全部音频；若已存在，立即跳过该词的全部生成和写入；否则立即加入集合，再尝试生成。首次生成失败、缺失任一口音或尚未写出任何文件，都不能释放 stem 给后面的词。不要通过“文件是否存在”判断是否重复，不从实际成功写入的文件重建资格。
 
-转换只影响音频文件名，word 显示文本及基于 Unicode casefold 的进度键不变。程序不重命名已有文件、不按旧名称回退。ReciteWords 只读取本地文件，不执行音频生成；上述写入规则供外部音频准备工具使用。
+转换只影响音频文件名，word 显示文本及基于 Unicode casefold 的进度键不变。程序不重命名或迁移已有文件，不按旧名称、旧 examples/ 目录或索引回退。ReciteWords 只读取本地文件，不执行音频生成；上述写入规则供外部音频准备工具使用。
 
-单词音频目录为 education/audio/；例句音频目录为 education/examples/，文件名为 `{stem}_e{eid}_uk.mp3`、`{stem}_e{eid}_us.mp3`，也支持同名 WAV，MP3 优先。例如 well_being_e01_uk.mp3、well_being_e01_us.mp3、well_being_e02_uk.mp3、well_being_e02_us.mp3。
+单词音频目录为 education/audio/；例句音频目录为 education/audio_sentences/，文件名为 `{stem}_e{eid}_uk.mp3`、`{stem}_e{eid}_us.mp3`，也支持同名 WAV，MP3 优先。例如 well_being_e01_uk.mp3、well_being_e01_us.mp3、well_being_e02_uk.mp3、well_being_e02_us.mp3。
 
 读取例句必须同时提供 word 与 eid，不能只按 eid 查找。后续重复 stem 的词条不能播放首次词条的任何音频，即使同名文件已经存在。程序不再读取 audio.json 或 examples.json，不查找旧索引指定的任意路径。缺失时禁用对应喇叭，不联网下载、不合成；自动发音仅用英音，音标不作为文件名。
 
 词源 Etymology 在备注 Notes 前显示；JSON 示例也按 etymology、notes 顺序书写。字段名仍为 notes，不改为 note；JSON 对象字段顺序不影响解析。
+
+不生成任何 `audio` 路径字段。读取时忽略旧路径字段；外部准备工具保存或重新输出时删除它们。ReciteWords 只读词库，不保存或重写源词库；学习进度保存不迁移源词库。
 
 ## 有效完整示例
 

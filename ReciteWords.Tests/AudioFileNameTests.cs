@@ -14,11 +14,15 @@ internal static partial class Program
     }
     static void AudioFileNameTests()
     {
-        Check("phrase and punctuation audio names use individual underscores", () => {
+        Check("unified ASCII stems collapse punctuation and lowercase", () => {
+            foreach (var pair in new[] { (" One's Own ", "one_s_own"), ("A / B", "a_b"), ("_A!", "a"), ("café", "caf"), ("!!!", "") })
+                Equal(pair.Item2, ReciteWords.Common.AudioFileName.Stem(pair.Item1));
+        });
+        Check("phrase and punctuation audio names use collapsed underscores", () => {
             string path = Write("phrases.json", PhraseList("take care of", "one's own", "well-being", "a / b", "_A!", "café"));
             string folder = Path.Combine(Temp, "phrases", "audio"); Directory.CreateDirectory(folder);
             var catalog = new AudioCatalog(); LoadCatalog(catalog, path);
-            foreach (var pair in new[] { (" take care of ", "take_care_of"), ("one's own", "one_s_own"), ("well-being", "well_being"), ("a / b", "a___b"), ("_A!", "_A_"), ("café", "caf_") })
+            foreach (var pair in new[] { (" take care of ", "take_care_of"), ("one's own", "one_s_own"), ("well-being", "well_being"), ("a / b", "a_b"), ("_A!", "a"), ("café", "caf") })
             {
                 string file = Path.Combine(folder, pair.Item2 + "_uk.mp3"); File.WriteAllText(file, "fixture");
                 Equal(file, catalog.FindWord(pair.Item1, "uk"));

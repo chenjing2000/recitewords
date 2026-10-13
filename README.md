@@ -37,8 +37,8 @@ WordLists/
   education/
     audio/loyalty_uk.mp3
     audio/loyalty_us.mp3
-    examples/loyalty_e01_uk.mp3
-    examples/loyalty_e01_us.mp3
+    audio_sentences/loyalty_e01_uk.mp3
+    audio_sentences/loyalty_e01_us.mp3
   userdata/
     education.progress.json
 ```
@@ -49,9 +49,9 @@ WordLists/
 
 进度只接收版本 2，删除 `review_count`、`position` 和持久化会话，只保存单词当前状态；重新打开从全部分类第一词建立新队列。旧进度读取失败，程序不迁移或覆盖。见 [学习进度格式](docs/Progress-Format.md)。
 
-音频主体 stem 由 word 去除首尾空白后，把每个 `[^0-9a-zA-Z]` 字符替换为 `_` 得到；不合并下划线、不转换大小写。同一 stem 按单词本顺序仅允许首词使用音频，后续词条仍可学习，但禁用全部单词与例句音频；首词文件不存在也不释放资格。显示和进度键不变。
+音频主体 stem 由 word 去除首尾空白、按 invariant-culture 转小写后，把每个非 ASCII `a-z`/`0-9` 字符替换为 `_` 得到；合并连续下划线并去掉首尾下划线。同一 stem 按单词本顺序仅允许首词使用音频，后续词条仍可学习，但禁用全部单词与例句音频；首词文件不存在也不释放资格。显示和进度键不变。
 
-单词音频直接读取同名子目录 `audio/` 中的 `{stem}_uk.mp3/.wav` 和 `{stem}_us.mp3/.wav`，MP3 优先，不再读取 audio.json。例句直接读取 examples/ 下的 `{stem}_e{eid}_uk/us.mp3/.wav`，不读取 examples.json。eid 是每个单词内从 01 开始的两位序号，不要求跨单词唯一。
+单词音频直接读取同名子目录 `audio/` 中的 `{stem}_uk.mp3/.wav` 和 `{stem}_us.mp3/.wav`，MP3 存在时优先，MP3 缺失才选 WAV，解码失败不回退，不再读取 audio.json。例句直接读取 audio_sentences/ 下的 `{stem}_e{eid}_uk/us.mp3/.wav`，不读取 examples.json。eid 是每个单词内从 01 开始的两位序号，不要求跨单词唯一。
 
 ## 构建与测试
 
@@ -94,3 +94,5 @@ Unicode 拼写匹配采用随程序嵌入的 Unicode 15.1 casefold 数据，保�
 
 
 发布后运行 `.\tools\Test-PublishedApp.ps1` 验证独立目录启动、配置位置和运行时缺失提示；具体流程见 [测试说明](docs/Testing.md)。
+
+音频统一协议不兼容旧目录、旧命名和索引，不自动迁移资源。空 stem 保留词条但禁用全部音频。旧 JSON 音频路径读取时忽略，外部工具保存时删除；程序不重写源词库。

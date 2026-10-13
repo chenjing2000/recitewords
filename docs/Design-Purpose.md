@@ -34,10 +34,10 @@ ReciteWords 是 Windows 上的本地单词背诵软件，使用 C#、WPF 和简�
 
 单词规则见 [格式 skill](skills/recitewords-wordlist-format/SKILL.md)：删除 wid，必填 word、phonetic_uk、phonetic_us 和非空 senses，每个词义必填 pos、chinese_meaning。界面顺序为英音音标、英音喇叭、美音音标、美音喇叭。
 
-音频文件名主体 stem 将 word 去除首尾空白后逐个替换非 ASCII 字母/数字为 `_`，不合并下划线、不转换大小写。重复 stem 不拒绝导入，只允许首次词条使用音频；word 显示及进度键不变。
+音频文件名主体 stem 将 word 去除首尾空白、按 invariant-culture 转小写后，替换非 ASCII `a-z`/`0-9` 为 `_`，合并连续下划线并去掉首尾下划线。空 stem 保留词条但禁用音频。重复 stem 不拒绝导入，只允许首次词条使用音频；word 显示及进度键不变。
 
-单词音频直接读取同名单词本子目录 audio/ 下的 `{stem}_uk.mp3/.wav`、`{stem}_us.mp3/.wav`，不再读取 audio.json。例句按每个单词内两位 eid，直接查找 examples/ 下的 stem_e{eid}_uk/us 文件，不读取 examples.json。重复 stem 只允许首次词条使用所有音频；后续词条仍能学习。词源显示在备注前，下拉项右移一个英文空格宽度。
+单词音频直接读取同名单词本子目录 audio/ 下的 `{stem}_uk.mp3/.wav`、`{stem}_us.mp3/.wav`，不再读取 audio.json。同一目标同一口音 MP3 存在时优先，仅缺失时选 WAV，解码失败不回退。例句按每个单词内两位 eid，直接查找 audio_sentences/ 下的 stem_e{eid}_uk/us 文件，不读取 examples.json。重复 stem 只允许首次词条使用所有音频；后续词条仍能学习。词源显示在备注前，下拉项右移一个英文空格宽度。
 
 [版本 2 进度](Progress-Format.md) 只保存单词当前状态，不保存 review_count、position 或本轮会话。每次打开从全部分类第一词开始，运行时仍保留内存队列和位置，支持前后切词与重评。
 
-此次为破坏性升级；旧词库与旧进度不兼容，不自动迁移或覆盖。未知词库字段仍忽略，但不能替代新格式的必填字段。
+此次为破坏性升级；旧词库与旧进度不兼容，不自动迁移或覆盖；旧音频目录、命名和索引不回退。旧 audio 路径字段读取时忽略，外部准备工具保存时删除，程序不重写源词库。未知词库字段仍忽略，但不能替代新格式的必填字段。

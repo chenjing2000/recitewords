@@ -238,7 +238,7 @@ internal static partial class Program
         File.WriteAllText(Path.Combine(folder, "scroll.json"), System.Text.Json.JsonSerializer.Serialize(new {
             words = new[] { new { word = "scroll", phonetic_uk = "", phonetic_us = "", senses } }
         }));
-        string audioFolder = Path.Combine(folder, "scroll", "examples"); Directory.CreateDirectory(audioFolder);
+        string audioFolder = Path.Combine(folder, "scroll", "audio_sentences"); Directory.CreateDirectory(audioFolder);
         foreach (string accent in new[] { "uk", "us" }) File.WriteAllBytes(Path.Combine(audioFolder, "scroll_e08_" + accent + ".wav"), Array.Empty<byte>());
         vm.SelectFolder(folder); vm.RevealDefinition(); Pump();
         window.Height = window.MinHeight + 100; Pump(); window.UpdateLayout();

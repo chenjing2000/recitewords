@@ -12,12 +12,13 @@ public class AudioCatalog : IAudioCatalog
         audioWords.Clear();
         string folder = Path.Combine(Path.GetDirectoryName(wordListPath)!, Path.GetFileNameWithoutExtension(wordListPath));
         audioFolder = Path.Combine(folder, "audio");
-        exampleFolder = Path.Combine(folder, "examples");
+        exampleFolder = Path.Combine(folder, "audio_sentences");
         var stems = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
         foreach (var word in words.Words)
         {
             // 首词按单词本顺序占用 stem，与文件是否存在或写入成功无关。
-            if (stems.Add(AudioFileName.Stem(word.Text))) audioWords.Add(Spelling.Fold(word.Text));
+            string stem = AudioFileName.Stem(word.Text);
+            if (stem.Length > 0 && stems.Add(stem)) audioWords.Add(Spelling.Fold(word.Text));
         }
     }
     public string? FindWord(string word, string accent)

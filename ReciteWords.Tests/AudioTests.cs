@@ -9,6 +9,21 @@ internal static partial class Program
     }
     static void AudioTests()
     {
+        Check("old sentence folder ignored and MP3 wins over WAV in new folder", () => {
+            string path = Write("sentence-priority.json", ExampleList("A / B", "!!!"));
+            string folder = Path.Combine(Temp, "sentence-priority");
+            Directory.CreateDirectory(Path.Combine(folder, "examples"));
+            File.WriteAllText(Path.Combine(folder, "examples", "a_b_e01_uk.mp3"), "fixture");
+            var catalog = new AudioCatalog(); LoadCatalog(catalog, path);
+            Equal<string?>(null, catalog.FindExample("A / B", "01", "uk"));
+            string sentences = Path.Combine(folder, "audio_sentences"); Directory.CreateDirectory(sentences);
+            string wav = Path.Combine(sentences, "a_b_e01_uk.wav"); File.WriteAllText(wav, "fixture");
+            Equal(wav, catalog.FindExample("A / B", "01", "uk"));
+            string mp3 = Path.ChangeExtension(wav, ".mp3"); File.WriteAllText(mp3, "fixture");
+            Equal(mp3, catalog.FindExample("A / B", "01", "uk"));
+            File.WriteAllText(Path.Combine(sentences, "_e01_uk.mp3"), "fixture");
+            Equal<string?>(null, catalog.FindExample("!!!", "01", "uk"));
+        });
         Check("direct word filenames and UK not replaced by US", () => {
             string path = Write("audio-list.json", Minimal); string folder = Path.Combine(Temp, "audio-list", "audio"); Directory.CreateDirectory(folder);
             File.WriteAllText(Path.Combine(folder, "aware_us.mp3"), "fixture");
@@ -17,7 +32,7 @@ internal static partial class Program
         });
         Check("example audio combines word stem and local eid", () => {
             string path = Write("example-audio.json", ExampleList("one's own", "second"));
-            string folder = Path.Combine(Temp, "example-audio", "examples"); Directory.CreateDirectory(folder);
+            string folder = Path.Combine(Temp, "example-audio", "audio_sentences"); Directory.CreateDirectory(folder);
             string first = Path.Combine(folder, "one_s_own_e01_uk.mp3"); File.WriteAllText(first, "fixture");
             string second = Path.Combine(folder, "second_e01_uk.wav"); File.WriteAllText(second, "fixture");
             var catalog = new AudioCatalog(); LoadCatalog(catalog, path);
@@ -26,11 +41,11 @@ internal static partial class Program
         });
         Check("duplicate stem skips all later audio even if first files absent", () => {
             string path = Write("duplicate-audio.json", ExampleList("well-being", "well being"));
-            string folder = Path.Combine(Temp, "duplicate-audio"); Directory.CreateDirectory(Path.Combine(folder, "audio")); Directory.CreateDirectory(Path.Combine(folder, "examples"));
+            string folder = Path.Combine(Temp, "duplicate-audio"); Directory.CreateDirectory(Path.Combine(folder, "audio")); Directory.CreateDirectory(Path.Combine(folder, "audio_sentences"));
             var catalog = new AudioCatalog(); LoadCatalog(catalog, path);
             Equal<string?>(null, catalog.FindWord("well-being", "uk")); Equal<string?>(null, catalog.FindWord("well being", "uk"));
             string wordFile = Path.Combine(folder, "audio", "well_being_uk.mp3"); File.WriteAllText(wordFile, "fixture");
-            string exampleFile = Path.Combine(folder, "examples", "well_being_e01_uk.mp3"); File.WriteAllText(exampleFile, "fixture");
+            string exampleFile = Path.Combine(folder, "audio_sentences", "well_being_e01_uk.mp3"); File.WriteAllText(exampleFile, "fixture");
             Equal(wordFile, catalog.FindWord("well-being", "uk")); Equal(exampleFile, catalog.FindExample("well-being", "01", "uk"));
             Equal<string?>(null, catalog.FindWord("well being", "uk")); Equal<string?>(null, catalog.FindExample("well being", "01", "uk"));
             File.WriteAllText(path, ExampleList("well being", "well-being")); LoadCatalog(catalog, path);

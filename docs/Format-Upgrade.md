@@ -1,4 +1,4 @@
-> 本文记录前两次升级，六位 eid、例句索引和 stem 冲突拒绝规则已被替代。当前规则以 Audio-Format.md 和格式 skill 为准。
+> 本文记录前两次升级，六位 eid、例句索引、stem 冲突拒绝和保留大小写/连续下划线的旧 stem 规则已被替代；当前例句目录为 audio_sentences/。当前规则以 Audio-Format.md 和格式 skill 为准。
 
 # 文件格式破坏性升级
 

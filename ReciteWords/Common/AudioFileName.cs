@@ -5,6 +5,6 @@ public static class AudioFileName
 {
     public static string Stem(string word)
     {
-        return Regex.Replace(word.Trim(), "[^0-9a-zA-Z]", "_");
+        return Regex.Replace(word.Trim().ToLowerInvariant(), "[^a-z0-9]+", "_").Trim('_');
     }
 }

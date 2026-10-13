@@ -35,12 +35,12 @@ Models 是共同数据协议，Common 是低层共享工具。Storage、Review�
 1. App 组装服务，MainViewModel 读取设置，确定默认目录或上次目录；选择没有有效词库的目录也会记住该目录。
 2. WordListRepository 扫描、验证词库，列表条目只保留不带扩展名的实际文件名与路径，JSON 的 name 不参与列表显示；选择后重新读取文件，避免缓存过期的整本词库。
 3. ProgressRepository 查找版本 2 userdata 记录并恢复单词状态，缺少时初始化；ReviewSession 从全部分类第一词建立新的内存队列。
-4. AudioCatalog 接收已经校验的 WordList，确定同名子目录 audio/ 和 examples/，按 words 顺序预留首次 stem；不读取任何音频索引 JSON。
+4. AudioCatalog 接收已经校验的 WordList，确定同名子目录 audio/ 和 audio_sentences/，按 words 顺序预留首次 stem；不读取任何音频索引 JSON。
 5. MainViewModel 更新绑定、隐藏释义、停止旧播放，并安排当前词的 UK 自动播放。连续切词时使旧的排队播放请求失效。
 
-Common.AudioFileName.Stem 去除首尾空白后，将每个非 ASCII 字母/数字替换为 `_`。Storage 不再拒绝 stem 冲突，仅保持原始拼写唯一；AudioCatalog 用不区分大小写的集合按 words 顺序预留 stem，无需判断文件是否存在。后续词禁用单词和例句音频，显示及进度键不变。
+Common.AudioFileName.Stem 去除首尾空白、按 invariant-culture 转小写后，将每个非 ASCII `a-z`/`0-9` 字符替换为 `_`，合并连续下划线并去掉首尾下划线；空 stem 保留词条但禁用全部音频。Storage 不再拒绝 stem 冲突，仅保持原始拼写唯一；AudioCatalog 用不区分大小写的集合按 words 顺序预留 stem，无需判断文件是否存在。后续词禁用单词和例句音频，显示及进度键不变。
 
-单词音频查 audio/{stem}_uk/us.mp3/.wav；例句查 examples/{stem}_e{eid}_uk/us.mp3/.wav，MP3 优先。eid 只在单词内按实际例句顺序从 01 起唯一，所以 FindExample 接收 word、eid 和口音，不再只接收 eid。
+单词音频查 audio/{stem}_uk/us.mp3/.wav；例句查 audio_sentences/{stem}_e{eid}_uk/us.mp3/.wav，MP3 存在时优先，缺失才选 WAV，解码失败不回退。eid 只在单词内按实际例句顺序从 01 起唯一，所以 FindExample 接收 word、eid 和口音，不再只接收 eid。
 
 AudioCatalog 不解析 JSON 索引，Load 无需返回配置错误集合；词库数据从 Storage 经 ViewModel 传入，Audio 不依赖具体 Storage 实现。只有文件存在时喇叭才可点击。
 
@@ -60,7 +60,7 @@ Models 的 ReviewProgress 只含可保存数据，Review 的 ReviewSnapshot 含�
 |---|---|---|
 | `<单词本名>.json` | 单词内容与释义 | 用户或生成工具；程序只读 |
 | `<单词本名>/audio/{stem}_uk.mp3/.wav`、`{stem}_us.mp3/.wav` | 单词英美音频文件 | 用户或音频准备工具 |
-| `<单词本名>/examples/{stem}_e{eid}_uk.mp3/.wav`、`{stem}_e{eid}_us.mp3/.wav` | 例句英美音频文件 | 用户或音频准备工具 |
+| `<单词本名>/audio_sentences/{stem}_e{eid}_uk.mp3/.wav`、`{stem}_e{eid}_us.mp3/.wav` | 例句英美音频文件 | 用户或音频准备工具 |
 | `userdata/<单词本名>.progress.json` | 单词当前状态（版本 2） | 程序保存 |
 | `<主程序名>.settings.json` | 上次目录、词库、窗口信息 | 程序保存 |
 
@@ -76,7 +76,7 @@ ProgressRepository 遍历学习状态属性时直接读取 JsonProperty.Value，
 
 当前升级已同步双音标模型、读取、绑定、显示、测试夹具，以及必填 pos 校验。删除了旧 WordProgress 次数模型，复习快照仅用于内存回滚，不进入文件。
 
-破坏性升级不迁移旧进度，不读取旧 audio.json；旧单音标词库和版本 1 进度读取失败。没有增加数据库、播放器或通用字段框架。
+音频路径从 word 与 eid 推导；旧 JSON audio 字段忽略，外部工具重写时删除，程序只读源词库。破坏性升级不迁移旧进度或音频，不读取旧目录、旧命名、audio.json 或 examples.json；旧单音标词库和版本 1 进度读取失败。没有增加数据库、播放器或通用字段框架。
 
 当前详细音频协议见 [音频文件规范](Audio-Format.md)。释义外框最低 5em，Etymology 在 Notes 前；筛选 ItemTemplate 用一个英文空格的实际宽度设置左边距。
 
