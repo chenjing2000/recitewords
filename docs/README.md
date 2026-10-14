@@ -11,7 +11,7 @@ These pages describe ReciteWords. File formats and architecture remain separate 
 | [Publishing](Publishing.md) | Portable profile, staged updates, and GitHub Release workflow |
 | [Release Notes](Release-Notes.md) | Distribution changes and runtime requirements |
 | [Health Check](Health-Check-2026-10-13.md) | Dated verification evidence and limitations |
-| [Code Review](Code-Review-2026-10-13.md) | Current module assessment, local fixes, retained design, and verified scope |
+| [Code Review](Code-Review-2026-10-15.md) | Current module assessment, strict progress validation, and verified scope |
 
 ## Application-specific references
 
