@@ -30,6 +30,10 @@ These pages describe ReciteWords. File formats and architecture remain separate 
 - [Implementation report](Implementation-Report.md)
 - [Original implementation plan](superpowers/plans/2026-10-04-recitewords-implementation-plan.md)
 
+## Skills
+
+- [Project code review and cleanup](skills/project-code-review/SKILL.md)
+
 ## Maintenance rules
 
 Keep executable commands in Testing and Publishing; link them from usage guides. Keep settings rules in Configuration. Record dated results in Health Check rather than implying that an old result verifies later changes. Domain references describe file formats and behavior, not another publishing pipeline. Historical audits and plans remain historical and are not the current workflow entry point.
